@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KVA-Monitor</string>
+    <string name="connect">"Verbindung herstellen"</string>
+    <string name="disconnected">Getrennt</string>
+    <string name="connected">Verbunden</string>
+</resources>

@@ -14,14 +14,32 @@
         android:layout_height="match_parent"
         android:layout_margin="8dp">
 
-
-        <FrameLayout
-            android:id="@+id/fragment_container"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:boxedEdges="all">
+            android:layout_height="match_parent">
 
-        </FrameLayout>
+            <FrameLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:boxedEdges="all"
+                tools:ignore="MissingPrefix">
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/time_view"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:visibility="invisible"
+                android:textColor="@color/white"
+                android:gravity="right"
+                android:textSize="14sp"
+                 />
+
+        </RelativeLayout>
+
+
 
     </android.support.wear.widget.BoxInsetLayout>
 

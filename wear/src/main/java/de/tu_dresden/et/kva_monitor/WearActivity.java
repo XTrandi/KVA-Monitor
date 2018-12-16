@@ -14,19 +14,26 @@ import android.view.GestureDetector;
 import android.view.View;
 import android.widget.TextView;
 
+import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 import de.tu_dresden.et.kva_monitor.R;
 
 public class WearActivity extends WearableActivity {
 
     private WearableNavigationDrawerView myNavigationDrawer;
     private int currentFragmentID = -1;
+
     private SectionFragment currentFragment;
+    private TextView timeView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wear);
 
+        timeView = findViewById(R.id.time_view);
 
         myNavigationDrawer = findViewById(R.id.navigation_drawer);
         myNavigationDrawer.setAdapter(new NavigationAdapter(this));
@@ -116,6 +123,8 @@ public class WearActivity extends WearableActivity {
         Log.d("Wear", "Entering ambient mode");
         if (currentFragment != null) {
             currentFragment.onEnterAmbient();
+            timeView.setVisibility(View.VISIBLE);
+            this.setTime();
         }
     }
 
@@ -125,6 +134,7 @@ public class WearActivity extends WearableActivity {
 
         if (currentFragment != null) {
             currentFragment.onExitAmbient();
+            timeView.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -134,6 +144,13 @@ public class WearActivity extends WearableActivity {
 
         if (currentFragment != null) {
             currentFragment.onUpdateAmbient();
+            this.setTime();
         }
     }
+
+    private void setTime() {
+        String sTime = DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date());
+        timeView.setText(sTime);
+    }
+
 }

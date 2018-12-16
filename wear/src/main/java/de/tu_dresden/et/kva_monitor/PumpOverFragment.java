@@ -88,8 +88,8 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
         targetTankView.setTextPaint(textPaint);
         pumpView.setTextPaint(textPaint);
 
-        sourceTankView.setText("Tank " + String.valueOf(sourceTankID+1) );
-        targetTankView.setText("Tank " + String.valueOf(targetTankID+1) );
+        sourceTankView.setText("B" + String.valueOf(sourceTankID+1) );
+        targetTankView.setText("B" + String.valueOf(targetTankID+1) );
         pumpView.setText("P" + String.valueOf(sourceTankID+1) );
 
         class InspectTouchArea implements View.OnTouchListener {
@@ -112,7 +112,7 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
                             if (fieldDeviceView.equals(sourceTankView)) {
                                 sourceTankID = (sourceTankID + 1) % 3;
                                 sourceTankView.setWaterLevel( (int) waterLevel[sourceTankID] );
-                                sourceTankView.setText("Tank " + String.valueOf(sourceTankID+1) );
+                                sourceTankView.setText("B" + String.valueOf(sourceTankID+1) );
                                 sourceTankView.invalidate();
 
                                 pumpView.setPumpState( pumpState[sourceTankID] );
@@ -127,7 +127,7 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
                             else if (fieldDeviceView.equals(targetTankView)) {
                                 targetTankID = (targetTankID + 1) % 3;
                                 targetTankView.setWaterLevel( (int) waterLevel[targetTankID] );
-                                targetTankView.setText("Tank " + String.valueOf(targetTankID+1) );
+                                targetTankView.setText("B" + String.valueOf(targetTankID+1) );
                                 targetTankView.invalidate();
 
                                 rightPipeView.setState( sourceValve[targetTankID] );

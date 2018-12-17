@@ -20,8 +20,8 @@ public class ShapePumpView extends FieldDeviceView {
     private ShapeDrawable shapePumpStateBorder;
     private ShapeDrawable shapePumpState; // described as triangle with color change
 
+
     private boolean pumpState;
-    private int pumpStateAnalog; // ToDo
 
     public ShapePumpView(Context context) {
         super(context);
@@ -63,7 +63,7 @@ public class ShapePumpView extends FieldDeviceView {
                 new PathShape(pathPumpState, 100, 100) );
 
         inputFeedback = new ShapeDrawable( new OvalShape() );
-
+        inputFeedback.getPaint().set(inputFeedbackPaint);
         // Define the paints
         onExitAmbient();
     }
@@ -84,6 +84,7 @@ public class ShapePumpView extends FieldDeviceView {
         shapePumpState.setBounds(coordLeft, coordTop, coordRight, coordBottom);
         shapePumpStateBorder.setBounds(coordLeft, coordTop, coordRight, coordBottom);
         inputFeedback.setBounds(coordLeft, coordTop, coordRight, coordBottom);
+
 
         this.invalidate();
     }
@@ -149,10 +150,6 @@ public class ShapePumpView extends FieldDeviceView {
             this.pumpState = pumpState;
             this.invalidate();
         }
-    }
-
-    public void setPumpStateAnalog(int analogValue) {
-        this.pumpStateAnalog = analogValue;
     }
 
 }

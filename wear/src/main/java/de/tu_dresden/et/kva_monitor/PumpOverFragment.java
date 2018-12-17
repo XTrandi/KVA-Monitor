@@ -117,7 +117,11 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
 
                                 pumpView.setPumpState( pumpState[sourceTankID] );
                                 if (sourceTankID == 2) {
-                                    pumpView.setPumpStateAnalog(pumpStateAnalog);
+                                    pumpView.displayAnalogValue(true);
+                                    pumpView.setAnalogValue(pumpStateAnalog);
+                                }
+                                else {
+                                    pumpView.displayAnalogValue(false);
                                 }
                                 pumpView.setText("P" + String.valueOf(sourceTankID+1) );
                                 pumpView.invalidate();
@@ -278,7 +282,8 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
             pumpView.setPumpState( pumpState[sourceTankID] );
 
             if (sourceTankID == 2) {
-                pumpView.setPumpStateAnalog(pumpStateAnalog);
+                pumpView.displayAnalogValue(true);
+                pumpView.setAnalogValue(pumpStateAnalog);
             }
 
             leftPipeView.setState( drainValve[sourceTankID] );

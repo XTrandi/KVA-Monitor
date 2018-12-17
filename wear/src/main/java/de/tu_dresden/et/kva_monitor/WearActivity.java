@@ -38,7 +38,6 @@ public class WearActivity extends WearableActivity {
         myNavigationDrawer = findViewById(R.id.navigation_drawer);
         myNavigationDrawer.setAdapter(new NavigationAdapter(this));
         myNavigationDrawer.addOnItemSelectedListener(new WearableNavigationDrawerView.OnItemSelectedListener() {
-            // ToDo: implement FragmentManager
             @Override
             public void onItemSelected(int index) {
                 if (currentFragmentID == index) { return; }

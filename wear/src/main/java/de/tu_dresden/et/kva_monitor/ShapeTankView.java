@@ -34,6 +34,9 @@ public class ShapeTankView extends FieldDeviceView {
         shapeContainer  = new ShapeDrawable( new RectShape() );
         shapeWaterLevel = new ShapeDrawable( new RectShape() );
         inputFeedback = new ShapeDrawable( new RectShape() );
+        inputFeedback.getPaint().set(inputFeedbackPaint);
+
+        // Define paints
         onExitAmbient();
     }
 

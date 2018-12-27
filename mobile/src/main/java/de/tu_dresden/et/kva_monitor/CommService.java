@@ -1,10 +1,12 @@
 package de.tu_dresden.et.kva_monitor;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.icu.util.Output;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -15,7 +17,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.util.Xml;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.wearable.DataClient;
@@ -35,17 +36,14 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
-
-import static android.support.v4.app.NotificationCompat.PRIORITY_LOW;
 
 public class CommService extends Service implements DataClient.OnDataChangedListener {
 
@@ -63,12 +61,15 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     static final String XML_DA_URL              = "http://141.30.154.211:8087/OPC/DA";
 
-    static final String NAMESPACE_SOAP = "http://schemas.xmlsoap.org/soap/envelope/";
-    static final String NAMESPACE_XSI  = "http://www.w3.org/2001/XMLSchema-instance";
-    static final String NAMESPACE_XSD  = "http://www.w3.org/2001/XMLSchema";
+    static final String NAMESPACE_SOAP          = "http://schemas.xmlsoap.org/soap/envelope/";
+    static final String NAMESPACE_XSI           = "http://www.w3.org/2001/XMLSchema-instance";
+    static final String NAMESPACE_XSD           = "http://www.w3.org/2001/XMLSchema";
 
     static final String PATH_WEAR_UI            = "/wear_UI";
     static final String PATH_OPC_REQUEST        = "/OPC_request";
+
+    static final String CHANNEL_ID_ALARM        = "Alarm";
+    static final String CHANNEL_ID_CONN_STATUS  = "Connection Status";
 
     // basic frame for XML files to be sent to the OPC DA server
     // TODO: Build OPC UA request dynamically
@@ -140,6 +141,8 @@ public class CommService extends Service implements DataClient.OnDataChangedList
     String XML_write;
 
     DataClient myDataClient;
+
+    Map<String, BinaryAlarm> alarmDatabase;
 
 
     @Override
@@ -222,7 +225,17 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         looper = thread.getLooper();
         serviceHandler = new ServiceHandler(looper);
 
+
+        // Client for data exchanges between handheld and wearable
         myDataClient = Wearable.getDataClient(this);
+
+        // Dictionary (hashtable) as database for the AlarmManager
+        createNotificationChannel();
+        alarmDatabase = new Hashtable<>();
+        String [] alarmDataPoints = getResources().getStringArray( R.array.alarm_datapoints_list );
+        for (String dataPoint: alarmDataPoints) {
+            alarmDatabase.put( dataPoint, new BinaryAlarm(this, dataPoint) );
+        }
 
     }
 
@@ -231,25 +244,29 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         // Start service from the UI.
         //TODO: Edit notification properties for running service, change icon
 
+        // Run HTTP requests
         Message msg = serviceHandler.obtainMessage(READ_REQUEST_WHATID); //start new loop
         serviceHandler.sendMessage(msg);
 
+        // Refer to the handheld activity that started the OPC communication
+        // This activity is started when the notification is tapped (setContentIntent)
         Intent notificationIntent = new Intent(this, ControlActivity.class);
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
         Notification notification =
-                new NotificationCompat.Builder(this, "ChannelID")
-                        .setContentTitle("Title")
-                        .setContentText("Benachrichtigungstext")
+                new NotificationCompat.Builder(this, CHANNEL_ID_CONN_STATUS)
+                        .setContentTitle(getString(R.string.notification_OPC_connection_title))
+                        .setContentText(getString(R.string.notification_OPC_connection_text))
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setContentIntent(pendingIntent)
-                        .setTicker("Tickertext")
+                        //.setTicker("Tickertext")
                         .build();
 
-
-
         startForeground(ONGOING_NOTIFICATION_ID, notification);
+
+
+        // Listen to commands sent from wearable and listen for changes to alarm data pointsandorid java dictionary
 
         myDataClient.addListener(this);
 
@@ -282,6 +299,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                     "\"http://opcfoundation.org/webservices/XMLDA/1.0/" + typeIO + "\""); //header
 
             connection.setFixedLengthStreamingMode(body.length());
+
             OutputStream outputStream = new BufferedOutputStream(connection.getOutputStream());
             BufferedWriter writer = new BufferedWriter(
                     new OutputStreamWriter(outputStream, "UTF-8"));
@@ -336,6 +354,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
             int eventType;
             String itemName, dataType, value;
+            BinaryAlarm binaryAlarm;
 
             while ( true ) {
                 eventType = parser.next();
@@ -375,6 +394,13 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                                     default:
                                         break;
                                 }
+
+                                // Set values for the (custom) AlarmManager
+                                if ( alarmDatabase.containsKey(itemName) ) {
+                                    binaryAlarm = alarmDatabase.get(itemName);
+                                    binaryAlarm.setPresentValue( Boolean.parseBoolean(value) );
+                                }
+
                             }
                             // otherwise, discard item if it has no value
                         }
@@ -389,20 +415,13 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                     String sReplyTime = parser.getAttributeValue(null, "ReplyTime");
                 }
 
-                // ReadResponse body investigated, skip parsing
+                // ReadResponse body read and all information fetched, skip parsing
                 else if ( eventType == XmlPullParser.END_TAG &&
                         parser.getName().equals("ReadResponse") ) {
                     break;
                 }
             }
-/*
-            // navigate to information nodes
-            while ( !(eventType == XmlPullParser.START_TAG &&
-                    parser.getName().equals("RItemList")) ){
-                eventType = parser.next();
-            }
 
-*/
 
             stream.close();
 
@@ -420,179 +439,33 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     }
 
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
 
-    /**
-     * Given a URL, sets up a connection and gets the HTTP response body from the server.
-     * If the network request is successful, it returns the response body in String form. Otherwise,
-     * it will throw an IOException.
-     */
-    private String downloadUrl(URL url) throws IOException {
-        InputStream stream = null;
-        HttpURLConnection connection;
-        String result = null;
-        connection = (HttpURLConnection) url.openConnection();
-
-
-        String data = "<SOAP-ENV:Envelope\n" +
-                "   xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
-                "   xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\"\n" +
-                "   xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                "   xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n" +
-                "   <SOAP-ENV:Body>\n" +
-                "     <m:Read xmlns:m=\"http://opcfoundation.org/webservices/XMLDA/1.0/\">\n" +
-                "      <m:Options\n" +
-                "        ReturnErrorText=\"false\"\n" +
-                "        ReturnDiagnosticInfo=\"false\"\n" +
-                "        ReturnItemTime=\"false\"\n" +
-                "        ReturnItemPath=\"false\"\n" +
-                "        ReturnItemName=\"true\"\n" +
-                "      />\n" +
-                "      <m:ItemList>\n" +
-                "       <m:Items ItemName=\"Schneider/Fuellstand1_Ist\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/Fuellstand2_Ist\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/Fuellstand3_Ist\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/Start_Demo_FL\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/Demo_Status\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/LH3\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/LL1\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/LL2\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/LL3\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/P1\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/P2\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/P3\"/>\n" +
-                "       <m:Items ItemName=\"Schneider/M\"/>\n" +
-                "      </m:ItemList>\n" +
-                "     </m:Read>\n" +
-                "  </SOAP-ENV:Body>\n" +
-                "</SOAP-ENV:Envelope>";
-
-        try {
-
-            // Timeout for reading InputStream arbitrarily set to 3000ms.
-            connection.setReadTimeout(3000);
-            // Timeout for connection.connect() arbitrarily set to 3000ms.
-            connection.setConnectTimeout(3000);
-            // For this use case, set HTTP method to GET.
-            connection.setRequestMethod("POST");
-            // Already true by default but setting just in case; needs to be true since this request
-            // is carrying an input (response) body.
-            connection.setDoInput(true);
-            // Open communications link (network traffic occurs here).
-
-            //Header
-            connection.addRequestProperty("SOAPAction", "\"http://opcfoundation.org/webservices/XMLDA/1.0/Read\"");
-            connection.setFixedLengthStreamingMode( data.length() ); // wuerde ich nochmal berechnen
-
-            OutputStream mOutputStream = new BufferedOutputStream(connection.getOutputStream());
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(mOutputStream, "UTF-8"));
-            writer.write(data);
-            writer.flush();
-            writer.close();
-            mOutputStream.close();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Notification channel for alarming data points
+            CharSequence name = getString(R.string.channelName_alarm);
+            String description = getString(R.string.channelDescription_alarm);
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID_ALARM,
+                    name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
 
 
-            //mOutputStream.write
+            // Notification channel for this service running
+            name = getString(R.string.channelName_OPCconnection);
+            description = getString(R.string.channelDescription_OPCconnection);
+            importance = NotificationManager.IMPORTANCE_DEFAULT;
+            channel = new NotificationChannel(CHANNEL_ID_CONN_STATUS, name, importance);
+            channel.setDescription(description);
 
-            connection.connect();
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode != HttpsURLConnection.HTTP_OK) {
-                throw new IOException("HTTP error code: " + responseCode);
-            }
-            // Retrieve the response body as an InputStream.
-            stream = connection.getInputStream();
-
-            if (stream != null) {
-                // Pure stream read out
-
-                /*
-                // Converts Stream to String with max length of 500.
-                int maxReadSize = 5000;
-                Reader reader = null;
-                reader = new InputStreamReader(stream, "UTF-8");
-                char[] rawBuffer = new char[maxReadSize];
-                int readSize;
-                StringBuffer buffer = new StringBuffer();
-                while (((readSize = reader.read(rawBuffer)) != -1) && maxReadSize > 0) {
-                    if (readSize > maxReadSize) {
-                        readSize = maxReadSize;
-                    }
-                    buffer.append(rawBuffer, 0, readSize);
-                    maxReadSize -= readSize;
-                }
-                result = buffer.toString();
-                Log.d("Service", result);
-                */
-
-
-
-                // XML parsing
-
-                XmlPullParser parser = Xml.newPullParser();
-                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-                stream = connection.getInputStream();
-                parser.setInput(stream, null);
-
-                parser.nextTag();
-                String nsSOAP = parser.getNamespace();
-                String nsXSI    = parser.getNamespace();
-                String nsXSD    = parser.getNamespace();
-                Log.d("XML", nsSOAP);
-                Log.d("XML", nsXSI);
-                Log.d("XML", nsXSD);
-
-                // stricter investigation of SOAP response
-                parser.require(XmlPullParser.START_TAG, nsSOAP, "Envelope"); parser.next();
-                parser.require(XmlPullParser.START_TAG, nsSOAP, "Body"); parser.next();
-                parser.require(XmlPullParser.START_TAG, null, "ReadResponse");
-
-                int eventType = parser.next();
-                String itemName;
-                String value;
-                // fast forward to that interesting events
-                while ( !(eventType == XmlPullParser.START_TAG &&
-                        parser.getName().equals("RItemList")) ){
-                    eventType = parser.next();
-                }
-
-                while ( !(eventType == XmlPullParser.END_TAG &&
-                        parser.getName().equals("RItemList")) ){
-
-                    if ( parser.getEventType() == XmlPullParser.START_TAG &&
-                            parser.getName().equals("Items")) {
-                        itemName = parser.getAttributeValue(null, "ItemName");
-                        parser.next();
-
-                        if ( parser.getEventType() == XmlPullParser.START_TAG &&
-                                parser.getName().equals("Value")) {
-                            value = parser.nextText();
-
-                        }
-                    }
-
-                    eventType = parser.next();
-                }
-
-
-
-            }
+            notificationManager.createNotificationChannel(channel);
         }
-
-        catch (IOException e) {
-            Log.d("Service", "Exception: " + e.getMessage() );
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
-        }
-
-        // Close Stream and disconnect HTTPS connection.
-        if (stream != null) {
-            stream.close();
-        }
-        if (connection != null) {
-            connection.disconnect();
-        }
-
-        return result;
     }
 
 }

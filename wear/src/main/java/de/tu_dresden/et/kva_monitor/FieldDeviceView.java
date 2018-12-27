@@ -31,7 +31,7 @@ public abstract class FieldDeviceView extends View {
     protected boolean ambientMode = false;
     protected boolean interactionEnabled = true;
     private boolean displayAnalogValue;
-    private int analogValue; // ToDo
+    private int analogValue;
 
 
     public FieldDeviceView(Context context) {
@@ -76,7 +76,6 @@ public abstract class FieldDeviceView extends View {
         }
     }
 
-    // copy method for transfering paint probably (?) not necessary
     public void setTextPaint(Paint paint) {
         this.textPaint = paint;
     }

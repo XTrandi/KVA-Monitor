@@ -3,22 +3,17 @@ package de.tu_dresden.et.kva_monitor;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.support.wear.widget.drawer.WearableNavigationDrawerView;
 import android.support.wearable.activity.WearableActivity;
-import android.support.wearable.internal.view.drawer.WearableNavigationDrawerPresenter;
-import android.support.wearable.view.drawer.WearableNavigationDrawer;
-import android.util.AttributeSet;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.View;
 import android.widget.TextView;
-
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.app.NotificationCompat.WearableExtender;
 import java.text.DateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
-import de.tu_dresden.et.kva_monitor.R;
 
 public class WearActivity extends WearableActivity {
 

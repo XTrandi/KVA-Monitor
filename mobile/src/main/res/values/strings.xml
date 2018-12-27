@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">KVA-Monitor</string>
-    <string name="connect">"Verbindung herstellen"</string>
+    <string name="connect">Verbindung herstellen</string>
     <string name="disconnected">Getrennt</string>
     <string name="connected">Verbunden</string>
+    <string name="channelName_alarm">Grenzwertsensoren</string>
+    <string name="channelDescription_alarm">Auslösung von Füllstandswächtern</string>
+    <string name="notification_OPC_connection_title">Verbunden mit OPC-Server</string>
+    <string name="notification_OPC_connection_text">Alarmweiterleitung aktiv</string>
+    <string name="channelName_OPCconnection">Verbindungsstatus</string>
+    <string name="channelDescription_OPCconnection">Verbindungsstatus zum OPC-Server</string>
 </resources>

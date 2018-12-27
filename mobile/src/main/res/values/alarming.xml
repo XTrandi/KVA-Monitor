@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    This is just a fast implementation for storing outside the java code via resources.
+    Future implementation might consider an XML-parser with additional validating
+    XML scheme definition.
+-->
+
+<!-- ToDO: Define icons for alarm purposes (ring bells in different colours) -->
+
+<!DOCTYPE resources [
+    <!ENTITY upperLimitTitle "Füllstandswächter oben ausgelöst">
+    <!ENTITY lowerLimitTitle "Füllstandswächter unten ausgelöst">
+    <!ENTITY upperLimitText "Hoher Wasserstand in Behälter">
+    <!ENTITY lowerLimitText "Niedriger Wasserstand in Behälter">
+    ]>
+<resources>
+    <string-array name="alarm_datapoints_list">
+        <item>LH1</item>
+        <item>LH2</item>
+        <item>LH3</item>
+        <item>LL1</item>
+        <item>LL2</item>
+        <item>LL3</item>
+    </string-array>
+
+    <bool name="LH1_alarmValue">false</bool>
+    <string name="LH1_alarmTitle">LH1: &upperLimitTitle;</string>
+    <string name="LH1_alarmText">&upperLimitText; 1</string>
+    <drawable name="LH1_alarmIcon">@drawable/teleag_icon</drawable>
+
+    <bool name="LH2_alarmValue">true</bool>
+    <string name="LH2_alarmTitle">LH2: &upperLimitTitle;</string>
+    <string name="LH2_alarmText">&upperLimitText; 2</string>
+    <drawable name="LH2_alarmIcon">@drawable/teleag_icon</drawable>
+
+    <bool name="LH3_alarmValue">true</bool>
+    <string name="LH3_alarmTitle">LH3: &upperLimitTitle;</string>
+    <string name="LH3_alarmText">&upperLimitText; 3</string>
+    <drawable name="LH3_alarmIcon">@drawable/teleag_icon</drawable>
+
+    <bool name="LL1_alarmValue">false</bool>
+    <string name="LL1_alarmTitle">LL1: &lowerLimitTitle;</string>
+    <string name="LL1_alarmText">&lowerLimitText; 1</string>
+    <drawable name="LL1_alarmIcon">@drawable/teleag_icon</drawable>
+
+    <bool name="LL2_alarmValue">false</bool>
+    <string name="LL2_alarmTitle">LL2: &lowerLimitTitle;</string>
+    <string name="LL2_alarmText">&lowerLimitText; 2</string>
+    <drawable name="LL2_alarmIcon">@drawable/teleag_icon</drawable>
+
+    <bool name="LL3_alarmValue">false</bool>
+    <string name="LL3_alarmTitle">LL3: &lowerLimitTitle;</string>
+    <string name="LL3_alarmText">&lowerLimitText; 3</string>
+    <drawable name="LL3_alarmIcon">@drawable/teleag_icon</drawable>
+
+</resources>

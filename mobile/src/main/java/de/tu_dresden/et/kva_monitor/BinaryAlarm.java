@@ -4,8 +4,6 @@ package de.tu_dresden.et.kva_monitor;
     implementations may add more transitions, time thresholds for allowing state transitions etc.
  */
 
-import android.content.Context;
-import android.content.Intent;
 import android.content.res.Resources;
 import android.media.RingtoneManager;
 import android.support.v4.app.NotificationCompat;
@@ -26,7 +24,7 @@ public class BinaryAlarm {
 
     private int notificationID;
 
-    private Context context;
+    private CommService context;
     private NotificationCompat.Builder notificationBuilder;
 
     enum State {
@@ -36,7 +34,7 @@ public class BinaryAlarm {
 
     private State alarmState;
 
-    public BinaryAlarm(Context context, String resourceIdentifier) {
+    public BinaryAlarm(CommService context, String resourceIdentifier) {
         this.context = context;
         alarmState = State.NORMAL;
 
@@ -108,6 +106,10 @@ public class BinaryAlarm {
                     alarmState = State.IN_ALARM;
                     // send notification
                     notificationManager.notify(notificationID, notificationBuilder.build());
+
+                    // to be included to the action
+                    context.queueLaunchActivityMessage(notificationID);
+                    // new StartWearableActivityTask().execute();
                 }
                 break;
             case IN_ALARM:

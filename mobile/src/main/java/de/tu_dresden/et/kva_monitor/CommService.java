@@ -19,12 +19,14 @@ import android.util.Log;
 import android.util.Xml;
 
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.android.gms.wearable.DataClient;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
+import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
@@ -40,8 +42,11 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -54,6 +59,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
     static final int STOP_SERVICE_WHATID        = 0;
     static final int READ_REQUEST_WHATID        = 1;
     static final int WRITE_REQUEST_WHATID       = 2;
+    static final int LAUNCH_WEARACTIVITY_WHATID = 3;
 
     static final int ONGOING_NOTIFICATION_ID    = 1;
 
@@ -67,6 +73,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     static final String PATH_WEAR_UI            = "/wear_UI";
     static final String PATH_OPC_REQUEST        = "/OPC_request";
+    static final String PATH_LAUNCH_ACTIVITY    = "/launch_activity";
 
     static final String CHANNEL_ID_ALARM        = "Alarm";
     static final String CHANNEL_ID_CONN_STATUS  = "Connection Status";
@@ -178,6 +185,8 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         }
     }
 
+    // any action that is not supposed to be run on the UI thread
+
     private final class ServiceHandler extends Handler {
         public ServiceHandler(Looper looper) {
             super(looper);
@@ -198,14 +207,22 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                 case READ_REQUEST_WHATID:
                     readOPCResponse( sendRequest("Read", XML_READ ) );
 
+                    // continue polling
                     message = this.obtainMessage(READ_REQUEST_WHATID);
-                    this.sendMessageDelayed(message, POLLING_INTERVAL_MS); // continue polling
+                    this.sendMessageDelayed(message, POLLING_INTERVAL_MS);
                     break;
                 case WRITE_REQUEST_WHATID:
                     sendRequest("Write", XML_write); // write request
 
-                    message = this.obtainMessage(READ_REQUEST_WHATID);
                     // follow up immediately with updated data (check response)
+                    message = this.obtainMessage(READ_REQUEST_WHATID);
+                    this.sendMessage(message);
+                    break;
+                case LAUNCH_WEARACTIVITY_WHATID:
+                    launchWearActivity(msg.arg1);
+
+                    // continue polling and get immediate response for wear activity
+                    message = this.obtainMessage(READ_REQUEST_WHATID);
                     this.sendMessage(message);
                     break;
                 default: break;
@@ -322,7 +339,6 @@ public class CommService extends Service implements DataClient.OnDataChangedList
             return null;
         }
     }
-
 
     private void readOPCResponse (InputStream stream) {
         // Parse XML response from OPC server and forward data via data clients.
@@ -465,6 +481,37 @@ public class CommService extends Service implements DataClient.OnDataChangedList
             channel.setDescription(description);
 
             notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    public void queueLaunchActivityMessage(int id) {
+        Message msg = serviceHandler.obtainMessage(LAUNCH_WEARACTIVITY_WHATID,
+                id, 0);
+        serviceHandler.sendMessage(msg);
+    }
+
+    private void launchWearActivity(int id) {
+
+        // convert 32-bit integer into four 8-bit bytes (byte array of length 4)
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.putInt(id);
+
+        try {
+            // retrieve connected nodes (in this case all wearable devices)
+            Task<List<Node>> nodeListTask = Wearable.getNodeClient(this).getConnectedNodes();
+            List<Node> nodes = Tasks.await(nodeListTask);
+            for (Node node: nodes)  {
+                Task<Integer> sendMessageTask =
+                        Wearable.getMessageClient(this).sendMessage(
+                                node.getId(), CommService.PATH_LAUNCH_ACTIVITY, buffer.array());
+
+                //Tasks.await(sendMessageTask); // is this necessary?
+                // but an addOnSuccess / Failure Listener might be added
+            }
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

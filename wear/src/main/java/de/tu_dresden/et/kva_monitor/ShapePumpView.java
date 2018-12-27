@@ -85,8 +85,8 @@ public class ShapePumpView extends FieldDeviceView {
         shapePumpStateBorder.setBounds(coordLeft, coordTop, coordRight, coordBottom);
         inputFeedback.setBounds(coordLeft, coordTop, coordRight, coordBottom);
 
+        super.resize();
 
-        this.invalidate();
     }
 
     @Override

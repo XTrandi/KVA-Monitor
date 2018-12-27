@@ -30,6 +30,9 @@ import com.google.android.gms.wearable.Wearable;
 
 public class PumpOverFragment extends SectionFragment implements DataClient.OnDataChangedListener{
 
+    static final String ARGUMENT_SOURCE_TANK = "Argument_SourceTank";
+    static final String ARGUMENT_TARGET_TANK = "Argument_TargetTank";
+
     private static final int MAX_WATER_LEVEL = 280;
 
     // ID=0 <--> Tank1, ID=1 <--> Tank2, ID=2 <--> Tank 3
@@ -60,7 +63,6 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
     static final int TEXT_SIZE_PX   = 14;
 
 
-
     @SuppressLint("ClickableViewAccessibility")
     @Nullable
     @Override
@@ -68,6 +70,13 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
             LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
         final View view = inflater.inflate(R.layout.pumpover_frame, container, false);
+
+        Bundle bundle = this.getArguments();
+        if ( bundle!=null ) {
+            sourceTankID = bundle.getInt(ARGUMENT_SOURCE_TANK);
+            targetTankID = bundle.getInt(ARGUMENT_TARGET_TANK);
+        }
+
 
         // Define text font
         textPaint = new Paint();

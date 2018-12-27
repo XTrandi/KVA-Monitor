@@ -40,6 +40,7 @@ public class ShapeTankView extends FieldDeviceView {
         onExitAmbient();
     }
 
+    @Override
     public void resize() {
         int width  = this.getWidth();
         int height = this.getHeight();
@@ -55,6 +56,8 @@ public class ShapeTankView extends FieldDeviceView {
         inputFeedback.setBounds(coordLeft, coordTop, coordRight, coordBottom);
 
         setWaterLevel(this.waterLevel, true);
+
+        super.resize();
     }
 
     @Override
@@ -102,7 +105,8 @@ public class ShapeTankView extends FieldDeviceView {
         if ( waterLevel != this.waterLevel || forceRedraw ) {
             this.waterLevel = waterLevel;
 
-            if (coordBottom - coordTop == 0) { return; } // ToDo: why was this statement necessary?
+            // avoid exception when layout has not been inflated yet
+            if (coordBottom - coordTop == 0) { return; }
 
             int waterHeight = (coordBottom - coordTop) * waterLevel / maxWaterLevel;
             shapeWaterLevel.setBounds(
@@ -110,7 +114,8 @@ public class ShapeTankView extends FieldDeviceView {
                     coordBottom - waterHeight,
                     coordRight,
                     coordBottom);
-            this.invalidate(); // update / refresh this view
+
+            this.invalidate();
         }
     }
 

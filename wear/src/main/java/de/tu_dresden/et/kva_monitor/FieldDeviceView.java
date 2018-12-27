@@ -148,35 +148,45 @@ public abstract class FieldDeviceView extends View {
         this.interactionEnabled = value;
     }
 
+    public void resize() {
+        int width = this.getWidth();
+        float size = ANALOG_SIZE_SCALED * getWidth();
+        int top = coordBottom + (int) (4 * getResources().getDisplayMetrics().density);
+
+        shapeAnalogHolder.setBounds(
+                (int) ( (width - size) / 2 ),
+                top,
+                (int) ( (width + size) / 2 ),
+                top + (int) (size / 2) );
+
+        int left, bottom;
+        int sizeForValue = (int) (ANALOG_SIZE_SCALED * getWidth() * analogValue / 100);
+
+        Rect rect = shapeAnalogHolder.getBounds();
+
+        left = rect.left;
+        bottom = rect.bottom;
+
+        shapeAnalogDisplay.setBounds(
+                left,
+                bottom - sizeForValue/2,
+                left + sizeForValue,
+                bottom);
+
+        this.invalidate();
+    }
+
     public void setAnalogValue(int analogValue) {
         if (this.analogValue != analogValue) {
             this.analogValue = analogValue;
-
-            int left, bottom;
-            int size = (int) (ANALOG_SIZE_SCALED * getWidth() * analogValue / 100);
-
-            Rect rect = shapeAnalogHolder.getBounds();
-
-            left = rect.left;
-            bottom = rect.bottom;
-
-            shapeAnalogDisplay.setBounds(left, bottom - size/2, left + size, bottom);
             this.invalidate();
         }
     }
 
     public void displayAnalogValue(boolean value) {
-        this.displayAnalogValue = value;
-        if (value) {
-            int width = this.getWidth();
-            float size = ANALOG_SIZE_SCALED * getWidth();
-            int top = coordBottom + (int) (4 * getResources().getDisplayMetrics().density);
-
-            shapeAnalogHolder.setBounds(
-                    (int) ( (width - size) / 2 ),
-                    top,
-                    (int) ( (width + size) / 2 ),
-                    top + (int) (size / 2) );
+        if (displayAnalogValue != value) {
+            this.displayAnalogValue = value;
+            this.invalidate();
         }
     }
 }

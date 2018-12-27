@@ -23,7 +23,7 @@
         <item>LL3</item>
     </string-array>
 
-    <bool name="LH1_alarmValue">false</bool>
+    <bool name="LH1_alarmValue">true</bool>
     <string name="LH1_alarmTitle">LH1: &upperLimitTitle;</string>
     <string name="LH1_alarmText">&upperLimitText; 1</string>
     <drawable name="LH1_alarmIcon">@drawable/teleag_icon</drawable>
@@ -33,7 +33,7 @@
     <string name="LH2_alarmText">&upperLimitText; 2</string>
     <drawable name="LH2_alarmIcon">@drawable/teleag_icon</drawable>
 
-    <bool name="LH3_alarmValue">true</bool>
+    <bool name="LH3_alarmValue">false</bool>
     <string name="LH3_alarmTitle">LH3: &upperLimitTitle;</string>
     <string name="LH3_alarmText">&upperLimitText; 3</string>
     <drawable name="LH3_alarmIcon">@drawable/teleag_icon</drawable>

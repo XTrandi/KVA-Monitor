@@ -10,4 +10,7 @@
     <string name="notification_OPC_connection_text">Alarmweiterleitung aktiv</string>
     <string name="channelName_OPCconnection">Verbindungsstatus</string>
     <string name="channelDescription_OPCconnection">Verbindungsstatus zum OPC-Server</string>
+    <string name="open_in_app">In App öffnen</string>
+    <string name="notification_OPCconnection_failed_title">Verbindungsaufbau...</string>
+    <string name="notification_OPCconnection_failed_text">Verbindung zu OPC-Server wird hergestellt</string>
 </resources>

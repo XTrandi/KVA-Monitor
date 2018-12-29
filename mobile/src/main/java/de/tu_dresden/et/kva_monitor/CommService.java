@@ -15,6 +15,7 @@ import android.os.Message;
 import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.util.Xml;
 
@@ -59,7 +60,6 @@ public class CommService extends Service implements DataClient.OnDataChangedList
     static final int STOP_SERVICE_WHATID        = 0;
     static final int READ_REQUEST_WHATID        = 1;
     static final int WRITE_REQUEST_WHATID       = 2;
-    static final int LAUNCH_WEARACTIVITY_WHATID = 3;
 
     static final int ONGOING_NOTIFICATION_ID    = 1;
 
@@ -145,11 +145,13 @@ public class CommService extends Service implements DataClient.OnDataChangedList
             "  </SOAP-ENV:Body>\n" +
             "</SOAP-ENV:Envelope>";
 
-    String XML_write;
+    private String XML_write;
 
-    DataClient myDataClient;
+    private DataClient myDataClient;
 
-    Map<String, BinaryAlarm> alarmDatabase;
+    private Map<String, BinaryAlarm> alarmDatabase;
+
+    private NotificationCompat.Builder notificationBuilder;
 
 
     @Override
@@ -218,13 +220,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                     message = this.obtainMessage(READ_REQUEST_WHATID);
                     this.sendMessage(message);
                     break;
-                case LAUNCH_WEARACTIVITY_WHATID:
-                    launchWearActivity(msg.arg1);
 
-                    // continue polling and get immediate response for wear activity
-                    message = this.obtainMessage(READ_REQUEST_WHATID);
-                    this.sendMessage(message);
-                    break;
                 default: break;
             }
         }
@@ -269,18 +265,16 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         // This activity is started when the notification is tapped (setContentIntent)
         Intent notificationIntent = new Intent(this, ControlActivity.class);
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(this, 0, notificationIntent, 0);
+                PendingIntent.getActivity(this, 0, notificationIntent,0);
 
-        Notification notification =
-                new NotificationCompat.Builder(this, CHANNEL_ID_CONN_STATUS)
-                        .setContentTitle(getString(R.string.notification_OPC_connection_title))
-                        .setContentText(getString(R.string.notification_OPC_connection_text))
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setContentIntent(pendingIntent)
-                        //.setTicker("Tickertext")
-                        .build();
+        notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID_CONN_STATUS)
+                .setContentTitle(getString(R.string.notification_OPCconnection_failed_title))
+                .setContentText(getString(R.string.notification_OPCconnection_failed_text))
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentIntent(pendingIntent)
+                .setOnlyAlertOnce(true);
 
-        startForeground(ONGOING_NOTIFICATION_ID, notification);
+        startForeground(ONGOING_NOTIFICATION_ID, notificationBuilder.build());
 
 
         // Listen to commands sent from wearable and listen for changes to alarm data pointsandorid java dictionary
@@ -348,7 +342,20 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         // (there is no InputStream available)
         if (stream == null) {
             Log.d("Service", "No InputStream set, did not receive HTTP response");
-            return; }
+
+            notificationBuilder
+                    .setContentTitle(getString(R.string.notification_OPCconnection_failed_title))
+                    .setContentText(getString(R.string.notification_OPCconnection_failed_text));
+            NotificationManagerCompat.from(this)
+                    .notify(ONGOING_NOTIFICATION_ID, notificationBuilder.build());
+            return;
+        } else {
+            notificationBuilder
+                    .setContentTitle(getString(R.string.notification_OPC_connection_title))
+                    .setContentText(getString(R.string.notification_OPC_connection_text));
+            NotificationManagerCompat.from(this)
+                    .notify(ONGOING_NOTIFICATION_ID, notificationBuilder.build());
+        }
 
         // Prepare data map to contain data items to send
         PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(PATH_WEAR_UI);
@@ -455,6 +462,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     }
 
+    // For future TargetAPI, starting from Android 8.0
     private void createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
@@ -484,36 +492,5 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         }
     }
 
-    public void queueLaunchActivityMessage(int id) {
-        Message msg = serviceHandler.obtainMessage(LAUNCH_WEARACTIVITY_WHATID,
-                id, 0);
-        serviceHandler.sendMessage(msg);
-    }
-
-    private void launchWearActivity(int id) {
-
-        // convert 32-bit integer into four 8-bit bytes (byte array of length 4)
-        ByteBuffer buffer = ByteBuffer.allocate(4);
-        buffer.putInt(id);
-
-        try {
-            // retrieve connected nodes (in this case all wearable devices)
-            Task<List<Node>> nodeListTask = Wearable.getNodeClient(this).getConnectedNodes();
-            List<Node> nodes = Tasks.await(nodeListTask);
-            for (Node node: nodes)  {
-                Task<Integer> sendMessageTask =
-                        Wearable.getMessageClient(this).sendMessage(
-                                node.getId(), CommService.PATH_LAUNCH_ACTIVITY, buffer.array());
-
-                //Tasks.await(sendMessageTask); // is this necessary?
-                // but an addOnSuccess / Failure Listener might be added
-            }
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
 
 }
-

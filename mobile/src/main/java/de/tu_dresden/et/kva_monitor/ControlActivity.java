@@ -22,7 +22,6 @@ public class ControlActivity extends AppCompatActivity {
         setContentView(R.layout.activity_control);
 
         // define UI widgets
-        toggleButton = (Button) findViewById(R.id.toggleButton);
         connectionButton = (ToggleButton) findViewById(R.id.connectionButton);
 
         connectionButton.setChecked(false);
@@ -53,6 +52,4 @@ public class ControlActivity extends AppCompatActivity {
 
     }
 
-    public void toggleCommService(View view) {
-    }
 }

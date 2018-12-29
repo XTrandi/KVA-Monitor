@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="de.tu_dresden.et.kva_monitor">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -23,6 +24,7 @@
         </activity>
 
         <service android:name=".CommService" />
+        <service android:name=".NotificationIntentService" />
     </application>
 
 </manifest>

@@ -6,14 +6,6 @@
     android:orientation="vertical"
     tools:context=".ControlActivity">
 
-    <Button
-        android:id="@+id/toggleButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:text="@string/connect"
-        android:onClick="toggleCommService" />
-
     <ToggleButton
         android:id="@+id/connectionButton"
         android:layout_width="match_parent"

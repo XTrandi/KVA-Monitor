@@ -4,6 +4,8 @@ package de.tu_dresden.et.kva_monitor;
     implementations may add more transitions, time thresholds for allowing state transitions etc.
  */
 
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.media.RingtoneManager;
 import android.support.v4.app.NotificationCompat;
@@ -69,16 +71,9 @@ public class BinaryAlarm {
                     .setSmallIcon(iconResID)
                     .setPriority(NotificationCompat.PRIORITY_MAX) // might include that in resource file
                     .setVibrate(VIBRATION_PATTERN)
+                    .setOnlyAlertOnce(true)
                     .setSound( RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION) );
 
-            // Wearable-only notification features
-
-            //Intent actionIntent = new Intent()
-            NotificationCompat.WearableExtender wearableExtender = new NotificationCompat.WearableExtender()
-                    //.setDisplayIntent()
-                    ;
-
-            notificationBuilder.extend(wearableExtender);
 
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
@@ -104,12 +99,28 @@ public class BinaryAlarm {
                 // Condition for transitioning (currently unnecessary)
                 if (presentValue == alarmValue) {
                     alarmState = State.IN_ALARM;
+                    // Wearable-only notification features, adding parameter to notification
+
+                    Intent intent = new Intent(context, NotificationIntentService.class);
+                    intent.putExtra(CommService.PATH_LAUNCH_ACTIVITY, notificationID);
+
+                    PendingIntent pendingIntent =
+                            PendingIntent.getService(context, 0, intent,
+                                    PendingIntent.FLAG_UPDATE_CURRENT); // this flag is important
+
+                    NotificationCompat.Action action = new NotificationCompat.Action(
+                            R.drawable.teleag_icon, context.getString(R.string.open_in_app),
+                            pendingIntent);
+
+                    NotificationCompat.WearableExtender wearableExtender =
+                            new NotificationCompat.WearableExtender()
+                                    .addAction(action);
+
+                    notificationBuilder.extend(wearableExtender);
+
                     // send notification
                     notificationManager.notify(notificationID, notificationBuilder.build());
 
-                    // to be included to the action
-                    context.queueLaunchActivityMessage(notificationID);
-                    // new StartWearableActivityTask().execute();
                 }
                 break;
             case IN_ALARM:

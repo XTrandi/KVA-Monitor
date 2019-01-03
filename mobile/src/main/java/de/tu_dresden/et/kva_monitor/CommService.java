@@ -6,25 +6,30 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.util.Xml;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.android.gms.wearable.DataClient;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
+import com.google.android.gms.wearable.DataItemBuffer;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Node;
@@ -63,7 +68,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     static final int ONGOING_NOTIFICATION_ID    = 1;
 
-    static final int POLLING_INTERVAL_MS        = 1000;
+    static final int POLLING_INTERVAL_MS        = 500;
 
     static final String XML_DA_URL              = "http://141.30.154.211:8087/OPC/DA";
 
@@ -79,7 +84,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
     static final String CHANNEL_ID_CONN_STATUS  = "Connection Status";
 
     // basic frame for XML files to be sent to the OPC DA server
-    // TODO: Build OPC UA request dynamically
+
     static final String XML_READ =
             "<SOAP-ENV:Envelope\n" +
             "   xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
@@ -109,6 +114,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
             "       <m:Items ItemName=\"Schneider/P2\"/>\n" +
             "       <m:Items ItemName=\"Schneider/P3\"/>\n" +
             "       <m:Items ItemName=\"Schneider/M\"/>\n" + // right now not in use
+            "       <m:Items ItemName=\"Schneider/W\"/>\n" + // unused
             "       <m:Items ItemName=\"Schneider/V1\"/>\n" +
             "       <m:Items ItemName=\"Schneider/V2\"/>\n" +
             "       <m:Items ItemName=\"Schneider/Y1\"/>\n" +
@@ -159,7 +165,8 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         for (DataEvent event: dataEventBuffer) {
             if (event.getType() == DataEvent.TYPE_CHANGED) {
                 DataItem item = event.getDataItem();
-                if (item.getUri().getPath().compareTo(PATH_OPC_REQUEST) == 0) {
+                Uri uri = item.getUri();
+                if (uri.getPath().compareTo(PATH_OPC_REQUEST) == 0) {
                     DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
 
                     String[] itemNames  = dataMap.getStringArray("item_names");
@@ -181,6 +188,13 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                     // queue write request to background service
                     Message message = serviceHandler.obtainMessage(WRITE_REQUEST_WHATID);
                     serviceHandler.sendMessage(message);
+
+                    /* Deletes these data items to make space for a new request (in case the
+                    following remote procedure call contains equal arguments). This is a background
+                    task and does not block any statements afterwards.
+                     */
+
+                    myDataClient.deleteDataItems(uri, DataClient.FILTER_LITERAL);
 
                 }
             }
@@ -250,34 +264,62 @@ public class CommService extends Service implements DataClient.OnDataChangedList
             alarmDatabase.put( dataPoint, new BinaryAlarm(this, dataPoint) );
         }
 
+        // Display foreground notification
+
+        // Refer to the handheld activity that started the OPC communication
+        // This activity is started when the notification is tapped (setContentIntent)
+        Intent openAppIntent = new Intent(this, ControlActivity.class);
+        openAppIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        PendingIntent openAppPendingIntent =
+                PendingIntent.getActivity(this, 0, openAppIntent, PendingIntent.FLAG_NO_CREATE);
+
+        // Shortcut for shutting down this service not implmented, see comment below
+        Intent shutdownServiceIntent = new Intent(this, CommService.class);
+        shutdownServiceIntent.putExtra("stop_service", true);
+        PendingIntent shutdownServicePendingIntent =
+                PendingIntent.getService(this, 0,
+                        shutdownServiceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID_CONN_STATUS)
+                .setContentTitle(getString(R.string.notification_OPCconnection_failed_title))
+                .setContentText(getString(R.string.notification_OPCconnection_failed_text))
+                .setSmallIcon(R.drawable.ic_http)
+                .setContentIntent(openAppPendingIntent)
+                .setOnlyAlertOnce(true);
+        /*
+        This is nice, but does not update the activity's UI (displaying the correct connection
+        status upon pressing this action
+         */
+        //        .addAction(R.drawable.ic_close, getString(R.string.disconnect), shutdownServicePendingIntent);
+
     }
 
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Start service from the UI.
         //TODO: Edit notification properties for running service, change icon
+
+        // Stop service from the notification button
+        Bundle extras = intent.getExtras();
+        if ( extras != null ) {
+            if (extras.getBoolean("stop_service", false)) {
+                stopSelf();
+                // ToDo: Set activity to change UI button connection status
+                return START_STICKY;
+            }
+        }
+
+
+        // Start service from the UI.
 
         // Run HTTP requests
         Message msg = serviceHandler.obtainMessage(READ_REQUEST_WHATID); //start new loop
         serviceHandler.sendMessage(msg);
 
-        // Refer to the handheld activity that started the OPC communication
-        // This activity is started when the notification is tapped (setContentIntent)
-        Intent notificationIntent = new Intent(this, ControlActivity.class);
-        PendingIntent pendingIntent =
-                PendingIntent.getActivity(this, 0, notificationIntent,0);
-
-        notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID_CONN_STATUS)
-                .setContentTitle(getString(R.string.notification_OPCconnection_failed_title))
-                .setContentText(getString(R.string.notification_OPCconnection_failed_text))
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentIntent(pendingIntent)
-                .setOnlyAlertOnce(true);
-
         startForeground(ONGOING_NOTIFICATION_ID, notificationBuilder.build());
 
 
-        // Listen to commands sent from wearable and listen for changes to alarm data pointsandorid java dictionary
+        // Listen to commands sent from wearable and listen for changes to alarm data points
 
         myDataClient.addListener(this);
 
@@ -293,6 +335,8 @@ public class CommService extends Service implements DataClient.OnDataChangedList
     @Override
     public void onDestroy() {
         // Stop service
+        looper.quit();
+        thread.quit();
         myDataClient.removeListener(this);
         serviceHandler.sendEmptyMessage(STOP_SERVICE_WHATID);
     }

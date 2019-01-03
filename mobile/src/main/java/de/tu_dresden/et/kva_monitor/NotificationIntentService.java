@@ -48,8 +48,6 @@ public class NotificationIntentService extends IntentService {
                                 node.getId(), CommService.PATH_LAUNCH_ACTIVITY, buffer.array());
                 Tasks.await(sendMessageTask);
                 // dismiss notification after finishing task (alternatively use onSuccessListener)
-
-                // ToDo: Test dismissal. since the NotificationManager is retrieve from a different context.
                 NotificationManagerCompat.from(this).cancel(notificationID);
 
             }

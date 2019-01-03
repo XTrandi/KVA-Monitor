@@ -26,31 +26,31 @@
     <bool name="LH1_alarmValue">true</bool>
     <string name="LH1_alarmTitle">LH1: &upperLimitTitle;</string>
     <string name="LH1_alarmText">&upperLimitText; 1</string>
-    <drawable name="LH1_alarmIcon">@drawable/teleag_icon</drawable>
+    <drawable name="LH1_alarmIcon">@drawable/ic_alarm</drawable>
 
     <bool name="LH2_alarmValue">true</bool>
     <string name="LH2_alarmTitle">LH2: &upperLimitTitle;</string>
     <string name="LH2_alarmText">&upperLimitText; 2</string>
-    <drawable name="LH2_alarmIcon">@drawable/teleag_icon</drawable>
+    <drawable name="LH2_alarmIcon">@drawable/ic_alarm</drawable>
 
-    <bool name="LH3_alarmValue">false</bool>
+    <bool name="LH3_alarmValue">true</bool>
     <string name="LH3_alarmTitle">LH3: &upperLimitTitle;</string>
     <string name="LH3_alarmText">&upperLimitText; 3</string>
-    <drawable name="LH3_alarmIcon">@drawable/teleag_icon</drawable>
+    <drawable name="LH3_alarmIcon">@drawable/ic_alarm</drawable>
 
     <bool name="LL1_alarmValue">false</bool>
     <string name="LL1_alarmTitle">LL1: &lowerLimitTitle;</string>
     <string name="LL1_alarmText">&lowerLimitText; 1</string>
-    <drawable name="LL1_alarmIcon">@drawable/teleag_icon</drawable>
+    <drawable name="LL1_alarmIcon">@drawable/ic_warning</drawable>
 
     <bool name="LL2_alarmValue">false</bool>
     <string name="LL2_alarmTitle">LL2: &lowerLimitTitle;</string>
     <string name="LL2_alarmText">&lowerLimitText; 2</string>
-    <drawable name="LL2_alarmIcon">@drawable/teleag_icon</drawable>
+    <drawable name="LL2_alarmIcon">@drawable/ic_warning</drawable>
 
     <bool name="LL3_alarmValue">false</bool>
     <string name="LL3_alarmTitle">LL3: &lowerLimitTitle;</string>
     <string name="LL3_alarmText">&lowerLimitText; 3</string>
-    <drawable name="LL3_alarmIcon">@drawable/teleag_icon</drawable>
+    <drawable name="LL3_alarmIcon">@drawable/ic_warning</drawable>
 
 </resources>

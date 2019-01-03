@@ -154,36 +154,45 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
                                 // set data
                                 /*
                                 Use of string array enables handheld listener to universally send
-                                XML data requests independentally of the required service. Unique
+                                XML data requests independently of the required service. Unique
                                 key identifiers for the data map can be used.
                                 */
                                 dataMap.putStringArray("item_names", new String[]{
-                                        "Start_Umpumpen_FL",
                                         "Behaelter_A_FL",
-                                        "Behaelter_B_FL"
+                                        "Behaelter_B_FL",
+                                        "Auto_Fuellst_FL",
+                                        "Start_Umpumpen_FL"
                                 });
                                 dataMap.putStringArray("item_types", new String[]{
-                                        "boolean",
                                         "int",
-                                        "int"
+                                        "int",
+                                        "boolean",
+                                        "boolean"
                                 });
                                 dataMap.putStringArray("item_values", new String[]{
-                                        String.valueOf( !pumpState[sourceTankID] ),
                                         String.valueOf( sourceTankID+1 ),
-                                        String.valueOf( targetTankID+1)
+                                        String.valueOf( targetTankID+1),
+                                        String.valueOf( true ),
+                                        String.valueOf( !pumpState[sourceTankID] )
                                 });
 
-                                // Deprecated, too much work :)
-                                /*
-                                dataMap.putBoolean("Start_Umpumpen_FL", !pumpState[sourceTankID]);
-                                dataMap.putInt("Behaelter_A_FL", sourceTankID+1);
-                                dataMap.putInt("Behaelter_B_FL", targetTankID+1);
-                                */
                                 PutDataRequest request = putDataMapRequest.asPutDataRequest();
                                 request.setUrgent();
                                 Task<DataItem> putDataTask = myDataClient.putDataItem(request);
                                 // Optionally a Success / Failure listener may be added to the task
                             }
+
+                            if (sourceTankID == targetTankID) {
+                                leftPipeView.setVisibility( View.INVISIBLE );
+                                rightPipeView.setVisibility( View.INVISIBLE );
+                                pumpView.enableInteraction(false);
+                            }
+                            else {
+                                leftPipeView.setVisibility( View.VISIBLE );
+                                rightPipeView.setVisibility( View.VISIBLE );
+                                pumpView.enableInteraction(true);
+                            }
+
                             break;
                         }
 

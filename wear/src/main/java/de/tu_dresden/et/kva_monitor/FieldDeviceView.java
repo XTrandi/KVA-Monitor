@@ -179,6 +179,21 @@ public abstract class FieldDeviceView extends View {
     public void setAnalogValue(int analogValue) {
         if (this.analogValue != analogValue) {
             this.analogValue = analogValue;
+
+            Rect rect = shapeAnalogHolder.getBounds();
+            int left, bottom;
+
+            left = rect.left;
+            bottom = rect.bottom;
+
+            int sizeForValue = (rect.right - left) * analogValue / 100;
+
+            shapeAnalogDisplay.setBounds(
+                    left,
+                    bottom - sizeForValue/2,
+                    left + sizeForValue,
+                    bottom);
+
             this.invalidate();
         }
     }

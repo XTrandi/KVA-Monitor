@@ -46,6 +46,8 @@ public class WearActivity extends WearableActivity {
             public void onItemSelected(int index) {
                 if (currentFragmentID == index) { return; }
 
+                currentFragmentID = index;
+
                 switch(index) {
                     case 0:
                         currentFragment = new PumpOverFragment();
@@ -154,8 +156,13 @@ public class WearActivity extends WearableActivity {
 
         @Override
         public Drawable getItemDrawable(int index) {
-            // Platzhalter
-            return myContext.getDrawable( R.drawable.teleag_icon );
+            switch(index) {
+                case 0:
+                    return myContext.getDrawable( R.drawable.ic_pump_over);
+                default:
+                    return myContext.getDrawable( R.drawable.teleag_icon );
+            }
+
         }
 
         // ToDo: Keep in mind what actions you actually implement

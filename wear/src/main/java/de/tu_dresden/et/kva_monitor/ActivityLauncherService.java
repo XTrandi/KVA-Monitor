@@ -18,7 +18,8 @@ public class ActivityLauncherService extends WearableListenerService {
 
             ByteBuffer wrapper = ByteBuffer.wrap( messageEvent.getData() );
             startIntent.putExtra(WearActivity.START_ARGUMENT, wrapper.getInt());
-            startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // ToDo: Check behaviour (in case multiple instances run)
+            startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(startIntent);
         }
     }

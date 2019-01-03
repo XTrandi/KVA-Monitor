@@ -13,4 +13,5 @@
     <string name="open_in_app">In App öffnen</string>
     <string name="notification_OPCconnection_failed_title">Verbindungsaufbau...</string>
     <string name="notification_OPCconnection_failed_text">Verbindung zu OPC-Server wird hergestellt</string>
+    <string name="disconnect">Trennen</string>
 </resources>

@@ -71,16 +71,13 @@ public class BinaryAlarm {
                     .setSmallIcon(iconResID)
                     .setPriority(NotificationCompat.PRIORITY_MAX) // might include that in resource file
                     .setVibrate(VIBRATION_PATTERN)
-                    .setOnlyAlertOnce(true)
                     .setSound( RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION) );
 
 
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
-            return;
         } catch (IllegalAccessException e) {
             e.printStackTrace();
-            return;
         }
 
     }
@@ -109,7 +106,7 @@ public class BinaryAlarm {
                                     PendingIntent.FLAG_UPDATE_CURRENT); // this flag is important
 
                     NotificationCompat.Action action = new NotificationCompat.Action(
-                            R.drawable.teleag_icon, context.getString(R.string.open_in_app),
+                            R.drawable.ic_open_in_app, context.getString(R.string.open_in_app),
                             pendingIntent);
 
                     NotificationCompat.WearableExtender wearableExtender =

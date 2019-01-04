@@ -69,7 +69,7 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
     public View onCreateView(
             LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
-        final View view = inflater.inflate(R.layout.pumpover_frame, container, false);
+        final View view = inflater.inflate(R.layout.pump_over_frame, container, false);
 
         Bundle bundle = this.getArguments();
         if ( bundle!=null ) {
@@ -153,7 +153,7 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
 
                                 // set data
                                 /*
-                                Use of string array enables handheld listener to universally send
+                                Use of string arrays enables handheld listener to universally send
                                 XML data requests independently of the required service. Unique
                                 key identifiers for the data map can be used.
                                 */

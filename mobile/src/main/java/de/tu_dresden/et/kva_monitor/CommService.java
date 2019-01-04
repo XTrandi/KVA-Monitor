@@ -221,18 +221,20 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                     Log.d("Service", "Disconnected.");
                     break;
                 case READ_REQUEST_WHATID:
-                    readOPCResponse( sendRequest("Read", XML_READ ) );
-
                     // continue polling
                     message = this.obtainMessage(READ_REQUEST_WHATID);
                     this.sendMessageDelayed(message, POLLING_INTERVAL_MS);
+
+                    // background task: send request to OPC server
+                    readOPCResponse( sendRequest("Read", XML_READ ) );
                     break;
                 case WRITE_REQUEST_WHATID:
-                    sendRequest("Write", XML_write); // write request
-
                     // follow up immediately with updated data (check response)
                     message = this.obtainMessage(READ_REQUEST_WHATID);
                     this.sendMessage(message);
+
+                    // background task: send write request to OPC server
+                    sendRequest("Write", XML_write);
                     break;
 
                 default: break;

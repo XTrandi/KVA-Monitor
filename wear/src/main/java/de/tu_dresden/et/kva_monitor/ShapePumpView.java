@@ -12,9 +12,6 @@ import android.util.AttributeSet;
 
 public class ShapePumpView extends FieldDeviceView {
 
-    // ToDo: Add analog view for pump 3
-    // ToDo: Define colours and ambient-mode
-
     private ShapeDrawable shapeCircle;
     private ShapeDrawable pumpLines;
     private ShapeDrawable shapePumpStateBorder;
@@ -22,6 +19,7 @@ public class ShapePumpView extends FieldDeviceView {
 
 
     private boolean pumpState;
+    private boolean pumpInteractionEnabled = true;
 
     public ShapePumpView(Context context) {
         super(context);
@@ -140,7 +138,7 @@ public class ShapePumpView extends FieldDeviceView {
 
         boolean areaPressed = ( Math.pow(x - xCenter, 2) + Math.pow(y - yCenter, 2) ) < Math.pow(radius, 2);
         if (isPressed != areaPressed) {
-            isPressed = areaPressed;
+            isPressed = areaPressed && interactionEnabled;
             this.invalidate();
         }
     }
@@ -148,8 +146,18 @@ public class ShapePumpView extends FieldDeviceView {
     public void setPumpState(boolean pumpState) {
         if (pumpState != this.pumpState) {
             this.pumpState = pumpState;
+            this.interactionEnabled = this.pumpInteractionEnabled || pumpState;
             this.invalidate();
         }
+    }
+
+    // Override the enableInteraction variable, so the pump can always be shutdown (but not turned
+    // on) even when interaction is disabled.
+
+    @Override
+    public void enableInteraction(boolean value) {
+        this.pumpInteractionEnabled = value;
+        this.interactionEnabled = value || pumpState;
     }
 
 }

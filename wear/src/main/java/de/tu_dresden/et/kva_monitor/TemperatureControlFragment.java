@@ -1,26 +1,40 @@
 package de.tu_dresden.et.kva_monitor;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.Task;
 import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
+import com.google.android.gms.wearable.PutDataMapRequest;
+import com.google.android.gms.wearable.PutDataRequest;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.text.NumberFormat;
 
 public class TemperatureControlFragment extends SectionFragment{
 
-    private static final int MAX_WATER_LEVEL = 280;
+    private static final int MAX_WATER_LEVEL            = 280;
+    private static final int MIN_TEMPERATURE_SETPOINT   = 20;
+    private static final int MAX_TEMPERATURE_SETPOINT   = 55;
 
     private ShapeTankView tankView;
     private ImageView motorView;
@@ -28,17 +42,24 @@ public class TemperatureControlFragment extends SectionFragment{
     private TextView temperatureTextView;
     private TextView temperatureSetPointTextView;
     private ImageButton controlStateButton;
+    private View setPointOpenDialogView;
 
     private ImageView stirView;
     private View motorStirConnectorView;
     private ImageView temperatureSensorView;
     private View temperatureConnectorView;
 
+    private Dialog dialog;
+
+    //private NumberPicker setPointNumberPicker;
+
     private boolean ambientMode = false;
 
     private boolean heatingState = false;
     private boolean stirrerState = false;
     private boolean controlState = false;
+
+    private int temperatureSetPoint;
 
     @SuppressLint("ClickableViewAccessibility")
     @Nullable
@@ -48,6 +69,41 @@ public class TemperatureControlFragment extends SectionFragment{
 
         final View view = inflater.inflate(R.layout.temperature_control_frame, container, false);
 
+        // dialog for setpoint picker
+        final NumberPicker setPointNumberPicker = new NumberPicker(getContext());
+        setPointNumberPicker.setMaxValue(MAX_TEMPERATURE_SETPOINT);
+        setPointNumberPicker.setMinValue(MIN_TEMPERATURE_SETPOINT);
+        setPointNumberPicker.setWrapSelectorWheel(false);
+        setNumberPickerTextColor(setPointNumberPicker, Color.BLACK);
+
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getContext());
+        dialogBuilder.setView( setPointNumberPicker );
+        dialogBuilder.setTitle( getString(R.string.change_setpoint) );
+        dialogBuilder.setNegativeButton(getString(R.string.cancel), null);
+        dialogBuilder.setPositiveButton(getString(R.string.accept), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(PATH_OPC_REQUEST);
+                DataMap dataMap = putDataMapRequest.getDataMap();
+
+                // set data
+                /*
+                Use of string arrays enables handheld listener to universally send
+                XML data requests independently of the required service. Unique
+                key identifiers for the data map can be used.
+                */
+                dataMap.putStringArray("item_names", new String[]{"Temperatur_Soll_FL"});
+                dataMap.putStringArray("item_types", new String[]{"int"});
+                dataMap.putStringArray("item_values", new String[]{
+                        String.valueOf( setPointNumberPicker.getValue() ),});
+
+                PutDataRequest request = putDataMapRequest.asPutDataRequest();
+                request.setUrgent();
+                myDataClient.putDataItem(request);
+            }
+        });
+        dialog = dialogBuilder.create();
+
         // dynamic / active UI elements
         tankView                    = view.findViewById(R.id.tank_view);
         motorView                   = view.findViewById(R.id.motor_view);
@@ -55,6 +111,7 @@ public class TemperatureControlFragment extends SectionFragment{
         temperatureTextView         = view.findViewById(R.id.temperature_textView);
         temperatureSetPointTextView = view.findViewById(R.id.temperature_setpoint_textView);
         controlStateButton          = view.findViewById(R.id.control_button);
+        setPointOpenDialogView      = view.findViewById(R.id.setpoint_picker_button);
 
         tankView.setMaxWaterLevel(MAX_WATER_LEVEL);
         motorView.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.CLEAR);
@@ -72,6 +129,45 @@ public class TemperatureControlFragment extends SectionFragment{
             }
         });
 
+        controlStateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(PATH_OPC_REQUEST);
+                DataMap dataMap = putDataMapRequest.getDataMap();
+
+                // set data
+                /*
+                Use of string arrays enables handheld listener to universally send
+                XML data requests independently of the required service. Unique
+                key identifiers for the data map can be used.
+                */
+                dataMap.putStringArray("item_names", new String[]{
+                        "Auto_Temp_FL",
+                        "Start_Temperatur_FL"
+                });
+                dataMap.putStringArray("item_types", new String[]{
+                        "boolean",
+                        "boolean"
+                });
+                dataMap.putStringArray("item_values", new String[]{
+                        String.valueOf( !controlState ),
+                        String.valueOf( !controlState )
+                });
+
+                PutDataRequest request = putDataMapRequest.asPutDataRequest();
+                request.setUrgent();
+                myDataClient.putDataItem(request);
+            }
+        });
+
+        setPointOpenDialogView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setPointNumberPicker.setValue(temperatureSetPoint);
+                dialog.show();
+            }
+        });
+
         super.onCreateView(inflater, container, savedInstanceState);
 
         return view;
@@ -86,8 +182,10 @@ public class TemperatureControlFragment extends SectionFragment{
         temperatureConnectorView.setBackgroundColor(Color.WHITE);
         temperatureSensorView.setColorFilter(Color.WHITE);
         controlStateButton.setVisibility(View.INVISIBLE);
+        setPointOpenDialogView.setVisibility(View.INVISIBLE);
 
         motorView.getBackground().setColorFilter(Color.GREEN, PorterDuff.Mode.CLEAR);
+        dialog.dismiss();
 
         updateUI();
     }
@@ -101,6 +199,7 @@ public class TemperatureControlFragment extends SectionFragment{
         temperatureConnectorView.setBackgroundColor(Color.BLACK);
         temperatureSensorView.setColorFilter(Color.BLACK);
         controlStateButton.setVisibility(View.VISIBLE);
+        setPointOpenDialogView.setVisibility(View.VISIBLE);
 
         motorView.setColorFilter(Color.BLACK);
         stirView.setColorFilter(Color.BLACK);
@@ -119,18 +218,17 @@ public class TemperatureControlFragment extends SectionFragment{
     protected void readOutData(DataItem item) {
         if (item.getUri().getPath().compareTo(PATH_WEAR_UI) == 0) {
             DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
-            temperatureTextView.setText(
-                    String.format("%s °C", NumberFormat.getInstance().
-                            format(dataMap.getFloat("Temperatur_Ist") ) ) );
 
-            temperatureSetPointTextView.setText(
-                    String.format("%s °C", dataMap.getInt("Temperatur_Soll_FL")) );
+            temperatureTextView.setText(
+                    String.format("%s °C", dataMap.getFloat("Temperatur_Ist") ) );
+
+            temperatureSetPoint = dataMap.getInt("Temperatur_Soll_FL");
+            temperatureSetPointTextView.setText( String.format("%s °C", temperatureSetPoint) );
 
             tankView.setWaterLevel( (int) dataMap.getFloat("Fuellstand3_Ist") );
 
             heatingState = dataMap.getBoolean("W");
             stirrerState = dataMap.getBoolean("M");
-            heatingState = true;
             controlState = dataMap.getBoolean("Start_Temperatur_FL");
 
             updateUI();
@@ -175,4 +273,28 @@ public class TemperatureControlFragment extends SectionFragment{
     }
 
 
+    /*
+    Method to change a number picker's text colour.
+    Credits to: https://stackoverflow.com/a/22962195
+     */
+    private static void setNumberPickerTextColor(NumberPicker numberPicker, int color)
+    {
+
+        try{
+            Field selectorWheelPaintField = numberPicker.getClass()
+                    .getDeclaredField("mSelectorWheelPaint");
+            selectorWheelPaintField.setAccessible(true);
+            ((Paint)selectorWheelPaintField.get(numberPicker)).setColor(color);
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+
+        final int count = numberPicker.getChildCount();
+        for(int i = 0; i < count; i++){
+            View child = numberPicker.getChildAt(i);
+            if(child instanceof EditText)
+                ((EditText)child).setTextColor(color);
+        }
+        numberPicker.invalidate();
+    }
 }

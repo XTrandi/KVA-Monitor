@@ -210,7 +210,6 @@ public class PumpOverFragment extends SectionFragment {
             }
         });
 
-        //myDataClient = Wearable.getDataClient(getContext());
         super.onCreateView(inflater, container, savedInstanceState);
 
         return view;

@@ -2,6 +2,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:baselineAligned="false">
@@ -11,17 +12,33 @@
         android:layout_height="match_parent"
         android:layout_weight="1">
 
+        <ImageButton
+            android:id="@+id/setpoint_picker_button"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/transparent_button_background"
+            app:layout_constraintBottom_toBottomOf="@+id/temperature_setpoint_textView"
+            app:layout_constraintEnd_toEndOf="@+id/temperature_textView"
+            app:layout_constraintStart_toStartOf="@+id/temperature_textView"
+            app:layout_constraintTop_toTopOf="@+id/margin_helper"
+            android:contentDescription="@string/setpoint_picker" />
+
+        <View
+            android:id="@+id/margin_helper"
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/temperature_sensor_view" />
+
         <ImageView
             android:id="@+id/temperature_sensor_view"
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:contentDescription="@string/sensor_temperature"
             android:src="@drawable/fd_sensor_temperature"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/temperature_sensor_connector_view"
             app:layout_constraintEnd_toEndOf="parent"
-             />
+            app:layout_constraintEnd_toStartOf="@+id/temperature_sensor_connector_view"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <View
             android:id="@+id/temperature_sensor_connector_view"
@@ -44,7 +61,7 @@
             app:layout_constraintStart_toStartOf="@+id/temperature_sensor_view"
             app:layout_constraintTop_toBottomOf="@+id/temperature_sensor_view" />
 
-        <!-- ToDo: Edit colour for setpoint, remove the stubs-->
+        <!-- ToDo: Edit colour for setpoint -->
         <TextView
             android:id="@+id/temperature_setpoint_textView"
             android:layout_width="50dp"
@@ -119,7 +136,6 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1">
-
 
         <ImageButton
             android:id="@+id/control_button"

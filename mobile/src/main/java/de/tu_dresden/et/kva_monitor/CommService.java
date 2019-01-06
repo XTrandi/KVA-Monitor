@@ -330,9 +330,24 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
         startForeground(ONGOING_NOTIFICATION_ID, notificationBuilder.build());
 
+        // Delete any standing wear requests
+        Task<DataItemBuffer> loadTask = myDataClient.getDataItems();
+        loadTask.addOnSuccessListener(
+                new OnSuccessListener<DataItemBuffer>() {
+                    @Override
+                    public void onSuccess(DataItemBuffer dataItemBuffer) {
+                        for (DataItem item: dataItemBuffer) {
+                            if (item.getUri().getPath().compareTo(PATH_OPC_REQUEST) == 0) {
+                                myDataClient.deleteDataItems(
+                                        item.getUri(), DataClient.FILTER_LITERAL);
+                            }
+                        }
+                        dataItemBuffer.release();
+                    }
+                }
+        );
 
         // Listen to commands sent from wearable and listen for changes to alarm data points
-
         myDataClient.addListener(this);
 
         return START_STICKY;

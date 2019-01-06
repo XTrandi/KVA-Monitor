@@ -11,4 +11,8 @@
     <string name="motor">Motor</string>
     <string name="stirrer">Rührer</string>
     <string name="status_control">Status Regelung</string>
+    <string name="setpoint_picker">Sollwertfeld</string>
+    <string name="change_setpoint">Sollwert einstellen</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="accept">Ok</string>
 </resources>

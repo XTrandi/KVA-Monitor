@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+<layer-list
+    xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item>
+        <shape
+            android:shape="ring"
+            android:thickness="2dp"
+            android:innerRadius="10dp"
+            android:useLevel="false"
+            >
+            <size
+                android:width="24dp"
+                android:height="24dp" />
+            <solid
+                android:color="@color/black" />
+        </shape>
+    </item>
+
+    <item
+        android:top="5dp"
+        android:bottom="3dp"
+        android:left="11dp"
+        android:right="11dp"
+        >
+        <shape
+            android:shape="rectangle">
+            <solid
+                android:color="@color/black" />
+        </shape>
+    </item>
+
+    <item
+        android:bottom="17dp"
+        android:left="6dp"
+        android:right="6dp"
+        android:top="5dp">
+        <shape
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:shape="rectangle">
+            <solid android:color="@color/black" />
+        </shape>
+    </item>
+</layer-list>
+-->
+
+<vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:height="24dp"
+    android:viewportHeight="24"
+    android:viewportWidth="24"
+    android:width="24dp"
+    >
+
+    <path
+        android:pathData="M 0.5 12, A 11.5 11.5 0 0 0 23.5 12, A 11.5 11.5 0 0 0 0.5 12"
+        android:strokeColor="@color/black"
+        android:strokeWidth="1"/>
+
+    <path
+        android:pathData="M 6 7, h12 -6, v12"
+        android:strokeColor="@color/black"
+        android:strokeWidth="1"/>
+
+</vector>

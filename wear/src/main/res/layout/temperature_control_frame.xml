@@ -1,40 +1,138 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    >
+    android:baselineAligned="false">
 
-    <!--
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:src="@drawable/teleag_icon"
-        android:contentDescription="MIRDOCHWUMPE" />
-    -->
-
-    <de.tu_dresden.et.kva_monitor.ShapeTankView
-        android:id="@+id/source_tank_view"
+    <android.support.constraint.ConstraintLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_marginStart="8dp"
-        android:layout_weight="2">
+        android:layout_weight="1">
 
-    </de.tu_dresden.et.kva_monitor.ShapeTankView>
+        <ImageView
+            android:id="@+id/temperature_sensor_view"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:contentDescription="@string/sensor_temperature"
+            android:src="@drawable/fd_sensor_temperature"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/temperature_sensor_connector_view"
+            app:layout_constraintEnd_toEndOf="parent"
+             />
 
-    <de.tu_dresden.et.kva_monitor.PipeView
-        android:id="@+id/right_pipe_view"
-        android:layout_width="16dp"
-        android:layout_height="match_parent" />
+        <View
+            android:id="@+id/temperature_sensor_connector_view"
+            android:layout_width="20dp"
+            android:layout_height="0.5dp"
+            android:background="@color/black"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <de.tu_dresden.et.kva_monitor.ShapeTankView
-        android:id="@+id/target_tank_view"
+        <TextView
+            android:id="@+id/temperature_textView"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center_horizontal"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="@+id/temperature_sensor_view"
+            app:layout_constraintStart_toStartOf="@+id/temperature_sensor_view"
+            app:layout_constraintTop_toBottomOf="@+id/temperature_sensor_view" />
+
+        <!-- ToDo: Edit colour for setpoint, remove the stubs-->
+        <TextView
+            android:id="@+id/temperature_setpoint_textView"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textColor="#ffFFC90E"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="@+id/temperature_sensor_view"
+            app:layout_constraintStart_toStartOf="@+id/temperature_sensor_view"
+            app:layout_constraintTop_toBottomOf="@+id/temperature_textView" />
+
+    </android.support.constraint.ConstraintLayout>
+
+    <android.support.constraint.ConstraintLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_marginEnd="8dp"
-        android:layout_weight="2" />
+        android:layout_weight="1">
+        <de.tu_dresden.et.kva_monitor.ShapeTankView
+            android:id="@+id/tank_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:id="@+id/heater_view"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="@string/heat_exchanger"
+            android:src="@drawable/fd_heat_exchanger"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.70" />
+
+        <ImageView
+            android:id="@+id/motor_view"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginTop="8dp"
+            android:contentDescription="@string/motor"
+            android:src="@drawable/fd_motor"
+            android:background="@drawable/fd_motor_background"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/motor_stir_connector_view"
+            android:layout_width="0.5dp"
+            android:layout_height="0dp"
+            android:background="@color/black"
+            app:layout_constraintBottom_toTopOf="@+id/stir_view"
+            app:layout_constraintTop_toBottomOf="@+id/motor_view"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <ImageView
+            android:id="@+id/stir_view"
+            android:layout_width="44dp"
+            android:layout_height="9dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/stirrer"
+            android:src="@drawable/fd_stir"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.40" />
+
+    </android.support.constraint.ConstraintLayout>
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
 
 
+        <ImageButton
+            android:id="@+id/control_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/button_background"
+            android:src="@drawable/button_run"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="@string/status_control" />
+
+    </android.support.constraint.ConstraintLayout>
 
 </LinearLayout>

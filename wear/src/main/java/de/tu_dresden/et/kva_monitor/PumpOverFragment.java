@@ -3,32 +3,22 @@ package de.tu_dresden.et.kva_monitor;
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Typeface;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.wearable.DataClient;
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
-import com.google.android.gms.wearable.DataItemBuffer;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
-import com.google.android.gms.wearable.Wearable;
 
 
-public class PumpOverFragment extends SectionFragment implements DataClient.OnDataChangedListener{
+public class PumpOverFragment extends SectionFragment {
 
     static final String ARGUMENT_SOURCE_TANK = "Argument_SourceTank";
     static final String ARGUMENT_TARGET_TANK = "Argument_TargetTank";
@@ -46,9 +36,6 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
     private boolean [] drainValve    = new boolean[3];
     private boolean [] sourceValve   = new boolean[3];
 
-    private static final String PATH_WEAR_UI        = "/wear_UI";
-    private static final String PATH_OPC_REQUEST    = "/OPC_request";
-
     private ShapeTankView sourceTankView;
     private ShapeTankView targetTankView;
     private ShapePumpView pumpView;
@@ -56,8 +43,6 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
     private PipeView rightPipeView;
 
     private static final float Y_CENTER_RATE = 0.66f;
-
-    DataClient myDataClient;
 
     Paint textPaint;
     static final int TEXT_SIZE_PX   = 14;
@@ -68,6 +53,7 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
     @Override
     public View onCreateView(
             LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+
 
         final View view = inflater.inflate(R.layout.pump_over_frame, container, false);
 
@@ -84,8 +70,9 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
         textPaint.setTextAlign(Paint.Align.CENTER);
         // scale text size from pixel (px) to scalable pixels (sp <--> dp for fonts)
         textPaint.setTextSize( TEXT_SIZE_PX * getResources().getDisplayMetrics().density );
-        textPaint.setTypeface(
-                Typeface.create("Roboto Condensed", Typeface.NORMAL) );
+        // not sure if this codeline is supported...
+        //textPaint.setTypeface(
+        //        Typeface.create("Roboto Condensed", Typeface.NORMAL) );
 
         sourceTankView = view.findViewById(R.id.source_tank_view);
         targetTankView = view.findViewById(R.id.target_tank_view);
@@ -223,61 +210,14 @@ public class PumpOverFragment extends SectionFragment implements DataClient.OnDa
             }
         });
 
-        myDataClient = Wearable.getDataClient(getContext());
+        //myDataClient = Wearable.getDataClient(getContext());
+        super.onCreateView(inflater, container, savedInstanceState);
 
         return view;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        // Load initial data.
-        Task<DataItemBuffer> task = myDataClient.getDataItems();
-        task.addOnSuccessListener(
-                new OnSuccessListener<DataItemBuffer>() {
-                    @Override
-                    public void onSuccess(DataItemBuffer dataItemBuffer) {
-                        Log.d("Wear", "Startup receive successful");
-                        for (DataItem dataItem: dataItemBuffer) {
-                            readOutData(dataItem);
-                        }
-                        dataItemBuffer.release();
-                    }
-                }
-        );
-        task.addOnFailureListener(
-                new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d("Wear", e.getMessage());
-                        // Data Client could not be accessed, handheld is not reachable.
-                    }
-                }
-        );
-
-        // Listen for changed data
-        myDataClient.addListener(this);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        // Unregister data client for changed data
-        myDataClient.removeListener(this);
-    }
-
-    @Override
-    public void onDataChanged(@NonNull DataEventBuffer dataEventBuffer) {
-        for (DataEvent event: dataEventBuffer) {
-            if (event.getType() == DataEvent.TYPE_CHANGED) {
-                readOutData( event.getDataItem() );
-            }
-        }
-    }
-
     // Reads data from DataItem, stores and transfer them to the UserInterface
-    private void readOutData(DataItem item) {
+    protected void readOutData(DataItem item) {
 
         if (item.getUri().getPath().compareTo(PATH_WEAR_UI) == 0) {
             DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();

@@ -90,6 +90,8 @@ public abstract class FieldDeviceView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        // text displayed 4dp above field device
+
         if (text != null) {
             canvas.drawText(text,
                     getWidth()/2,coordTop - 4 * getResources().getDisplayMetrics().density,

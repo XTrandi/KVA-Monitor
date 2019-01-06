@@ -6,4 +6,9 @@
     -->
     <string name="hello_world">Hello Square World!</string>
     <string name="pump_over">Umpumpen</string>
+    <string name="sensor_temperature">Temperaturfühler</string>
+    <string name="heat_exchanger">Heizung</string>
+    <string name="motor">Motor</string>
+    <string name="stirrer">Rührer</string>
+    <string name="status_control">Status Regelung</string>
 </resources>

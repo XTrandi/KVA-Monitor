@@ -52,11 +52,12 @@ public class WearActivity extends WearableActivity {
                     case 0:
                         currentFragment = new PumpOverFragment();
                         break;
+                    case 1:
+                        currentFragment = new TemperatureControlFragment();
+                        break;
                     default:
                         return;
                 }
-
-                currentFragmentID = index;
 
                 // switch view by loading new fragment
                 getFragmentManager()
@@ -113,10 +114,11 @@ public class WearActivity extends WearableActivity {
             currentFragment.setArguments(args);
 
         }
-        // Nothing specified
+        // Nothing specified ToDo: change back to pumping over
         else {
-            currentFragment = new PumpOverFragment();
+            currentFragment = new TemperatureControlFragment();
         }
+
 
 
 

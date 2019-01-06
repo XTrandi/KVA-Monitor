@@ -70,7 +70,9 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     static final int POLLING_INTERVAL_MS        = 500;
 
+    // ToDo: change back to normal!
     static final String XML_DA_URL              = "http://141.30.154.211:8087/OPC/DA";
+    //static final String XML_DA_URL              = "http://192.168.178.103/OPC/DA";
 
     static final String NAMESPACE_SOAP          = "http://schemas.xmlsoap.org/soap/envelope/";
     static final String NAMESPACE_XSI           = "http://www.w3.org/2001/XMLSchema-instance";
@@ -113,8 +115,11 @@ public class CommService extends Service implements DataClient.OnDataChangedList
             "       <m:Items ItemName=\"Schneider/P1\"/>\n" +
             "       <m:Items ItemName=\"Schneider/P2\"/>\n" +
             "       <m:Items ItemName=\"Schneider/P3\"/>\n" +
-            "       <m:Items ItemName=\"Schneider/M\"/>\n" + // right now not in use
-            "       <m:Items ItemName=\"Schneider/W\"/>\n" + // unused
+            "       <m:Items ItemName=\"Schneider/M\"/>\n" +
+            "       <m:Items ItemName=\"Schneider/W\"/>\n" +
+            "       <m:Items ItemName=\"Schneider/Temperatur_Ist\"/>\n" +
+            "       <m:Items ItemName=\"Schneider/Temperatur_Soll_FL\"/>\n" +
+            "       <m:Items ItemName=\"Schneider/Start_Temperatur_FL\"/>\n" +
             "       <m:Items ItemName=\"Schneider/V1\"/>\n" +
             "       <m:Items ItemName=\"Schneider/V2\"/>\n" +
             "       <m:Items ItemName=\"Schneider/Y1\"/>\n" +
@@ -159,6 +164,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     private NotificationCompat.Builder notificationBuilder;
 
+    private volatile boolean serviceRunning;
 
     @Override
     public void onDataChanged(@NonNull DataEventBuffer dataEventBuffer) {
@@ -204,6 +210,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
     // any action that is not supposed to be run on the UI thread
 
     private final class ServiceHandler extends Handler {
+
         public ServiceHandler(Looper looper) {
             super(looper);
         }
@@ -214,6 +221,8 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
             this.removeMessages(READ_REQUEST_WHATID); // always remove these messages to avoid duplicates
 
+            if ( !serviceRunning ) { return; }
+
             Message message;
 
             switch (msg.what) {
@@ -221,20 +230,20 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                     Log.d("Service", "Disconnected.");
                     break;
                 case READ_REQUEST_WHATID:
+                    // send request to OPC server
+                    readOPCResponse( sendRequest("Read", XML_READ ) );
+
                     // continue polling
                     message = this.obtainMessage(READ_REQUEST_WHATID);
                     this.sendMessageDelayed(message, POLLING_INTERVAL_MS);
-
-                    // background task: send request to OPC server
-                    readOPCResponse( sendRequest("Read", XML_READ ) );
                     break;
                 case WRITE_REQUEST_WHATID:
+                    // send write request to OPC server
+                    sendRequest("Write", XML_write);
+
                     // follow up immediately with updated data (check response)
                     message = this.obtainMessage(READ_REQUEST_WHATID);
                     this.sendMessage(message);
-
-                    // background task: send write request to OPC server
-                    sendRequest("Write", XML_write);
                     break;
 
                 default: break;
@@ -271,10 +280,10 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         // Refer to the handheld activity that started the OPC communication
         // This activity is started when the notification is tapped (setContentIntent)
         Intent openAppIntent = new Intent(this, ControlActivity.class);
-        openAppIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        openAppIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // This is bullshit
 
         PendingIntent openAppPendingIntent =
-                PendingIntent.getActivity(this, 0, openAppIntent, PendingIntent.FLAG_NO_CREATE);
+                PendingIntent.getActivity(this, 0, openAppIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Shortcut for shutting down this service not implmented, see comment below
         Intent shutdownServiceIntent = new Intent(this, CommService.class);
@@ -291,7 +300,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                 .setOnlyAlertOnce(true);
         /*
         This is nice, but does not update the activity's UI (displaying the correct connection
-        status upon pressing this action
+        status upon pressing this action)
          */
         //        .addAction(R.drawable.ic_close, getString(R.string.disconnect), shutdownServicePendingIntent);
 
@@ -313,6 +322,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
 
         // Start service from the UI.
+        serviceRunning = true;
 
         // Run HTTP requests
         Message msg = serviceHandler.obtainMessage(READ_REQUEST_WHATID); //start new loop
@@ -337,10 +347,11 @@ public class CommService extends Service implements DataClient.OnDataChangedList
     @Override
     public void onDestroy() {
         // Stop service
+        serviceHandler.sendEmptyMessage(STOP_SERVICE_WHATID);
         looper.quit();
         thread.quit();
         myDataClient.removeListener(this);
-        serviceHandler.sendEmptyMessage(STOP_SERVICE_WHATID);
+        serviceRunning = false;
     }
 
     private InputStream sendRequest (String typeIO, String body) {
@@ -383,6 +394,9 @@ public class CommService extends Service implements DataClient.OnDataChangedList
     private void readOPCResponse (InputStream stream) {
         // Parse XML response from OPC server and forward data via data clients.
         // TODO: usage of advanced XML parser (optional, since more memory inefficient)
+
+        // Service stopped by the UI inbetween sending HTTP request. Stop notification.
+        if (!serviceRunning) {return;}
 
         // In case connecting to the OPC UA Server is not successful, skip reading the response
         // (there is no InputStream available)

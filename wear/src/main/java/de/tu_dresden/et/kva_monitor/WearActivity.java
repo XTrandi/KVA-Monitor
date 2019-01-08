@@ -1,19 +1,38 @@
 package de.tu_dresden.et.kva_monitor;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.wear.widget.drawer.WearableNavigationDrawerView;
 import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.google.android.gms.wearable.DataClient;
+import com.google.android.gms.wearable.DataEvent;
+import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.DataItem;
+import com.google.android.gms.wearable.DataMap;
+import com.google.android.gms.wearable.DataMapItem;
+import com.google.android.gms.wearable.Wearable;
+
 import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
-public class WearActivity extends WearableActivity {
+public class WearActivity extends WearableActivity implements DataClient.OnDataChangedListener {
 
     static final String START_ARGUMENT      = "Start_Argument";
 
@@ -25,11 +44,22 @@ public class WearActivity extends WearableActivity {
     static final int START_ARGUMENT_LL2     = "LL2".hashCode();
     static final int START_ARGUMENT_LL3     = "LL3".hashCode();
 
-    private WearableNavigationDrawerView myNavigationDrawer;
+    // Polling interval to check connection status
+    static final int POLLING_INTERVAL_SEC       = 5;
+    // Maximum allowed difference between reply time from OPC server (with phone as intermediate)
+    // and watch time
+    static final int MAX_TIME_DIFFERENCE_SEC    = 60;
+
     private int currentFragmentID = -1;
 
     private SectionFragment currentFragment;
     private TextView timeView;
+    private ImageView connectionStatusView;
+
+    private ScheduledExecutorService scheduler;
+    private DataClient myDataClient;
+
+    private long lastReplyTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +68,9 @@ public class WearActivity extends WearableActivity {
         setContentView(R.layout.activity_wear);
 
         timeView = findViewById(R.id.time_view);
+        connectionStatusView = findViewById(R.id.connection_status_view);
 
-        myNavigationDrawer = findViewById(R.id.navigation_drawer);
+        WearableNavigationDrawerView myNavigationDrawer = findViewById(R.id.navigation_drawer);
         myNavigationDrawer.setAdapter(new NavigationAdapter(this));
         myNavigationDrawer.addOnItemSelectedListener(new WearableNavigationDrawerView.OnItemSelectedListener() {
             @Override
@@ -114,23 +145,81 @@ public class WearActivity extends WearableActivity {
             currentFragment.setArguments(args);
 
         }
-        // Nothing specified ToDo: change back to pumping over
+        // Nothing specified
         else {
-            currentFragment = new TemperatureControlFragment();
+            currentFragment = new PumpOverFragment();
         }
-
-
-
 
         getFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, currentFragment )
                 .commit();
 
+        // Check connection status (to phone via bluetooth + OPC server via HTTP)
+        myDataClient = Wearable.getDataClient(this);
+
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate( new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        long timeDifference = Calendar.getInstance().getTime().getTime() - lastReplyTime;
+                        if (timeDifference > MAX_TIME_DIFFERENCE_SEC * 1000) {
+                            connectionStatusView.setVisibility(View.VISIBLE);
+                        }
+                        else {
+                            connectionStatusView.setVisibility(View.INVISIBLE);
+                        }
+                    }
+                });
+
+
+            }
+        }, POLLING_INTERVAL_SEC, POLLING_INTERVAL_SEC, TimeUnit.SECONDS);
+
+
         // Enables Always-on
         setAmbientEnabled();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        myDataClient.addListener(this);
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    @Override
+    public void onDataChanged(@NonNull DataEventBuffer dataEventBuffer) {
+        for (DataEvent event: dataEventBuffer) {
+            if (event.getType() == DataEvent.TYPE_CHANGED) {
+                DataItem item = event.getDataItem();
+                if (item.getUri().getPath().compareTo(SectionFragment.PATH_WEAR_UI) == 0) {
+                    DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
+                    String sReplyTime = dataMap.getString("ReplyTime");
+
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'+01:00'");
+
+                    try {
+                        Date date = format.parse(sReplyTime);
+                        lastReplyTime = date.getTime();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        myDataClient.removeListener(this);
+    }
+
+    // Wearable navigation drawer on top of the activity
     private final class NavigationAdapter
             extends WearableNavigationDrawerView.WearableNavigationDrawerAdapter {
 
@@ -148,6 +237,9 @@ public class WearActivity extends WearableActivity {
             switch (index) {
                 case 0:
                     subtext = getString(R.string.pump_over);
+                    break;
+                case 1:
+                    subtext = getString(R.string.temperature_control);
                     break;
                 default:
                     break;
@@ -167,21 +259,21 @@ public class WearActivity extends WearableActivity {
 
         }
 
-        // ToDo: Keep in mind what actions you actually implement
         @Override
         public int getCount() {
-            return 3;
+            return 2;
         }
 
     }
 
 
-    // send ambient mode towards fragment and its views
+    // send ambient mode towards child fragment and its views
     @Override
     public void onEnterAmbient(Bundle ambientDetails) {
         super.onEnterAmbient(ambientDetails);
 
-        Log.d("Wear", "Entering ambient mode");
+        connectionStatusView.setColorFilter(Color.WHITE);
+
         if (currentFragment != null) {
             currentFragment.onEnterAmbient();
             timeView.setVisibility(View.VISIBLE);
@@ -192,6 +284,8 @@ public class WearActivity extends WearableActivity {
     @Override
     public void onExitAmbient() {
         super.onExitAmbient();
+
+        connectionStatusView.setColorFilter(Color.BLACK);
 
         if (currentFragment != null) {
             currentFragment.onExitAmbient();
@@ -214,4 +308,9 @@ public class WearActivity extends WearableActivity {
         timeView.setText(sTime);
     }
 
+    @Override
+    protected void onDestroy() {
+        scheduler.shutdown();
+        super.onDestroy();
+    }
 }

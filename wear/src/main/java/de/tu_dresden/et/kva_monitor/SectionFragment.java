@@ -24,11 +24,25 @@ public abstract class SectionFragment extends Fragment implements DataClient.OnD
     static final String PATH_WEAR_UI        = "/wear_UI";
     static final String PATH_OPC_REQUEST    = "/OPC_request";
 
-    public abstract void onEnterAmbient();
-    public abstract void onExitAmbient();
-    public abstract void onUpdateAmbient();
-
     DataClient myDataClient;
+
+    /*
+    In ambient mode the UI is supposed to be updated via onUpdateAmbient (about every 1 minute).
+    Therefore the fragment does not listen to changes during ambient mode but will retrieve them
+    manually on ambient update demand.
+     */
+
+    public void onEnterAmbient() {
+        myDataClient.removeListener(this);
+    }
+
+    public void onExitAmbient() {
+        myDataClient.addListener(this);
+    }
+
+    public void onUpdateAmbient() {
+        this.onResume();
+    }
 
     @Nullable
     @Override
@@ -84,6 +98,7 @@ public abstract class SectionFragment extends Fragment implements DataClient.OnD
             }
         }
     }
+
     protected abstract void readOutData(DataItem item);
 
 }

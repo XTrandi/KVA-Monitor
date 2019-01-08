@@ -258,6 +258,8 @@ public class PumpOverFragment extends SectionFragment {
         rightPipeView.onEnterAmbient();
 
         textPaint.setColor(Color.WHITE);
+
+        super.onEnterAmbient();
     }
 
     @Override
@@ -269,10 +271,8 @@ public class PumpOverFragment extends SectionFragment {
         rightPipeView.onExitAmbient();
 
         textPaint.setColor(Color.BLACK);
+
+        super.onExitAmbient();
     }
 
-    @Override
-    public void onUpdateAmbient() {
-
-    }
 }

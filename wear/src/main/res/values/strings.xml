@@ -15,4 +15,6 @@
     <string name="change_setpoint">Sollwert einstellen</string>
     <string name="cancel">Abbrechen</string>
     <string name="accept">Ok</string>
+    <string name="temperature_control">Temperaturregelung</string>
+    <string name="connection_status">Verbindungsstatus</string>
 </resources>

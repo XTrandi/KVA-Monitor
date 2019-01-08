@@ -188,6 +188,8 @@ public class TemperatureControlFragment extends SectionFragment{
         dialog.dismiss();
 
         updateUI();
+
+        super.onEnterAmbient();
     }
 
     @Override
@@ -207,11 +209,8 @@ public class TemperatureControlFragment extends SectionFragment{
         heatExchangerView.setColorFilter(Color.BLACK);
 
         updateUI();
-    }
 
-    @Override
-    public void onUpdateAmbient() {
-
+        super.onExitAmbient();
     }
 
     @Override

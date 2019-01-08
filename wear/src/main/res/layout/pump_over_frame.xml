@@ -10,7 +10,6 @@
         android:id="@+id/source_tank_view"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_marginStart="8dp"
         android:layout_weight="2">
 
     </de.tu_dresden.et.kva_monitor.ShapeTankView>
@@ -37,7 +36,6 @@
         android:id="@+id/target_tank_view"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_marginEnd="8dp"
         android:layout_weight="2" />
 
 

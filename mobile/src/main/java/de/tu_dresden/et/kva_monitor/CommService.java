@@ -285,12 +285,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         PendingIntent openAppPendingIntent =
                 PendingIntent.getActivity(this, 0, openAppIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // Shortcut for shutting down this service not implmented, see comment below
-        Intent shutdownServiceIntent = new Intent(this, CommService.class);
-        shutdownServiceIntent.putExtra("stop_service", true);
-        PendingIntent shutdownServicePendingIntent =
-                PendingIntent.getService(this, 0,
-                        shutdownServiceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
 
         notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID_CONN_STATUS)
                 .setContentTitle(getString(R.string.notification_OPCconnection_failed_title))
@@ -300,26 +295,35 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                 .setOnlyAlertOnce(true);
         /*
         This is nice, but does not update the activity's UI (displaying the correct connection
-        status upon pressing this action)
-         */
-        //        .addAction(R.drawable.ic_close, getString(R.string.disconnect), shutdownServicePendingIntent);
+        status upon pressing this action), see function onStartCommand
 
+        // Shortcut for shutting down this service
+        Intent shutdownServiceIntent = new Intent(this, CommService.class);
+        shutdownServiceIntent.putExtra("stop_service", true);
+        PendingIntent shutdownServicePendingIntent =
+                PendingIntent.getService(this, 0,
+                        shutdownServiceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        notificationBuilder.addAction(R.drawable.ic_close, getString(R.string.disconnect), shutdownServicePendingIntent);
+        */
     }
 
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //TODO: Edit notification properties for running service, change icon
+
+        /*
+        Unused function. This allows the service to terminate via Intent. Not implemented since
+        synchronisation with the ControlActivity User Interface is complex or requires workarounds.
+        Low priority task.
 
         // Stop service from the notification button
         Bundle extras = intent.getExtras();
         if ( extras != null ) {
             if (extras.getBoolean("stop_service", false)) {
                 stopSelf();
-                // ToDo: Set activity to change UI button connection status
                 return START_STICKY;
             }
         }
-
+        */
 
         // Start service from the UI.
         serviceRunning = true;
@@ -331,21 +335,9 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         startForeground(ONGOING_NOTIFICATION_ID, notificationBuilder.build());
 
         // Delete any standing wear requests
-        Task<DataItemBuffer> loadTask = myDataClient.getDataItems();
-        loadTask.addOnSuccessListener(
-                new OnSuccessListener<DataItemBuffer>() {
-                    @Override
-                    public void onSuccess(DataItemBuffer dataItemBuffer) {
-                        for (DataItem item: dataItemBuffer) {
-                            if (item.getUri().getPath().compareTo(PATH_OPC_REQUEST) == 0) {
-                                myDataClient.deleteDataItems(
-                                        item.getUri(), DataClient.FILTER_LITERAL);
-                            }
-                        }
-                        dataItemBuffer.release();
-                    }
-                }
-        );
+
+        Uri uri = new Uri.Builder().scheme(PutDataRequest.WEAR_URI_SCHEME).path(PATH_OPC_REQUEST).build();
+        myDataClient.deleteDataItems(uri, DataClient.FILTER_LITERAL);
 
         // Listen to commands sent from wearable and listen for changes to alarm data points
         myDataClient.addListener(this);
@@ -355,7 +347,6 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: onBindMethod placeholder for AndroidWear connection (optional)
         return null;
     }
 
@@ -408,7 +399,6 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     private void readOPCResponse (InputStream stream) {
         // Parse XML response from OPC server and forward data via data clients.
-        // TODO: usage of advanced XML parser (optional, since more memory inefficient)
 
         // Service stopped by the UI inbetween sending HTTP request. Stop notification.
         if (!serviceRunning) {return;}
@@ -511,6 +501,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                         parser.getName().equals("ReadResult") ) {
                     // ToDo: display connection status via ReplyTime
                     String sReplyTime = parser.getAttributeValue(null, "ReplyTime");
+                    dataMap.putString("ReplyTime", sReplyTime);
                 }
 
                 // ReadResponse body read and all information fetched, skip parsing
@@ -566,6 +557,5 @@ public class CommService extends Service implements DataClient.OnDataChangedList
             notificationManager.createNotificationChannel(channel);
         }
     }
-
 
 }

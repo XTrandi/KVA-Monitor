@@ -12,7 +12,7 @@
     <android.support.wear.widget.BoxInsetLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="8dp">
+        android:layout_margin="8dp" >
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -30,12 +30,20 @@
             <TextView
                 android:id="@+id/time_view"
                 android:layout_width="match_parent"
-                android:layout_height="20dp"
+                android:layout_height="wrap_content"
                 android:visibility="invisible"
                 android:textColor="@color/white"
-                android:gravity="right"
+                android:gravity="end"
                 android:textSize="14sp"
                  />
+
+            <ImageView
+                android:id="@+id/connection_status_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_cloud_off_black_24dp"
+                android:contentDescription="@string/connection_status"
+                android:visibility="invisible" />
 
         </RelativeLayout>
 

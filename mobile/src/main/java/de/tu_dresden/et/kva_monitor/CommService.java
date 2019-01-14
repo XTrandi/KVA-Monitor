@@ -1,6 +1,5 @@
 package de.tu_dresden.et.kva_monitor;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -15,24 +14,19 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.util.Xml;
 
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
 import com.google.android.gms.wearable.DataClient;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
-import com.google.android.gms.wearable.DataItemBuffer;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
-import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
@@ -48,11 +42,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.ByteBuffer;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -70,9 +61,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     static final int POLLING_INTERVAL_MS        = 500;
 
-    // ToDo: change back to normal!
     static final String XML_DA_URL              = "http://141.30.154.211:8087/OPC/DA";
-    //static final String XML_DA_URL              = "http://192.168.178.103/OPC/DA";
 
     static final String NAMESPACE_SOAP          = "http://schemas.xmlsoap.org/soap/envelope/";
     static final String NAMESPACE_XSI           = "http://www.w3.org/2001/XMLSchema-instance";
@@ -211,7 +200,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     private final class ServiceHandler extends Handler {
 
-        public ServiceHandler(Looper looper) {
+        ServiceHandler(Looper looper) {
             super(looper);
         }
 
@@ -277,25 +266,12 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
         // Display foreground notification
 
-        // Refer to the handheld activity that started the OPC communication
-        // This activity is started when the notification is tapped (setContentIntent)
-        Intent openAppIntent = new Intent(this, ControlActivity.class);
-        openAppIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // This is bullshit
-
-        PendingIntent openAppPendingIntent =
-                PendingIntent.getActivity(this, 0, openAppIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-
-
         notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID_CONN_STATUS)
                 .setContentTitle(getString(R.string.notification_OPCconnection_failed_title))
                 .setContentText(getString(R.string.notification_OPCconnection_failed_text))
+                .setTicker(getString(R.string.notification_OPCconnection_failed_title))
                 .setSmallIcon(R.drawable.ic_http)
-                .setContentIntent(openAppPendingIntent)
                 .setOnlyAlertOnce(true);
-        /*
-        This is nice, but does not update the activity's UI (displaying the correct connection
-        status upon pressing this action), see function onStartCommand
 
         // Shortcut for shutting down this service
         Intent shutdownServiceIntent = new Intent(this, CommService.class);
@@ -304,17 +280,15 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                 PendingIntent.getService(this, 0,
                         shutdownServiceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         notificationBuilder.addAction(R.drawable.ic_close, getString(R.string.disconnect), shutdownServicePendingIntent);
-        */
+
     }
 
 
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         /*
-        Unused function. This allows the service to terminate via Intent. Not implemented since
-        synchronisation with the ControlActivity User Interface is complex or requires workarounds.
-        Low priority task.
-
+        This allows the service to terminate via Intent.
+        */
         // Stop service from the notification button
         Bundle extras = intent.getExtras();
         if ( extras != null ) {
@@ -323,7 +297,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                 return START_STICKY;
             }
         }
-        */
+
 
         // Start service from the UI.
         serviceRunning = true;
@@ -410,6 +384,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
             notificationBuilder
                     .setContentTitle(getString(R.string.notification_OPCconnection_failed_title))
+                    .setTicker(getString(R.string.notification_OPCconnection_failed_title))
                     .setContentText(getString(R.string.notification_OPCconnection_failed_text));
             NotificationManagerCompat.from(this)
                     .notify(ONGOING_NOTIFICATION_ID, notificationBuilder.build());
@@ -417,6 +392,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         } else {
             notificationBuilder
                     .setContentTitle(getString(R.string.notification_OPC_connection_title))
+                    .setTicker(getString(R.string.notification_OPC_connection_title))
                     .setContentText(getString(R.string.notification_OPC_connection_text));
             NotificationManagerCompat.from(this)
                     .notify(ONGOING_NOTIFICATION_ID, notificationBuilder.build());
@@ -499,7 +475,6 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
                 else if ( eventType == XmlPullParser.START_TAG &&
                         parser.getName().equals("ReadResult") ) {
-                    // ToDo: display connection status via ReplyTime
                     String sReplyTime = parser.getAttributeValue(null, "ReplyTime");
                     dataMap.putString("ReplyTime", sReplyTime);
                 }
@@ -523,7 +498,8 @@ public class CommService extends Service implements DataClient.OnDataChangedList
         // Data map is finished, convert to data and send via data request
         PutDataRequest request = putDataMapRequest.asPutDataRequest();
         request.setUrgent();
-        Task<DataItem> putDataTask = myDataClient.putDataItem(request);
+        myDataClient.putDataItem(request);
+        // Task<DataItem> putDataTask = myDataClient.putDataItem(request);
         // Optionally a Success / Failure listener may be added to the task
 
     }

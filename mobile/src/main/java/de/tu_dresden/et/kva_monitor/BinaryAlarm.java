@@ -43,8 +43,8 @@ public class BinaryAlarm {
         notificationID = resourceIdentifier.hashCode();
         // Retrieve data via resource name using Java Reflection
         Resources res = context.getResources();
-        Field field = null;
-        int resID = 0;
+        Field field;
+        int resID;
 
         try {
             field = R.bool.class.getDeclaredField(resourceIdentifier + "_alarmValue");

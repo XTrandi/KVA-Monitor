@@ -99,7 +99,6 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
                 Log.d("Wear", String.valueOf(index)); // confirmed
             }
         });
-        // ToDo: set Default View - maybe navigation drawer to be pulled the best idea?
 
         Intent intent = getIntent();
         int argValue = intent.getIntExtra(START_ARGUMENT, START_ARGUMENT_DEFAULT);
@@ -229,7 +228,6 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
             myContext = context;
         }
 
-        // ToDo: Add navigation tab's titles, short icons and everything else
         @Override
         public String getItemText(int index) {
             String subtext = null;
@@ -254,7 +252,7 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
                 case 0:
                     return myContext.getDrawable( R.drawable.ic_pump_over);
                 default:
-                    return myContext.getDrawable( R.drawable.teleag_icon );
+                    return myContext.getDrawable( R.drawable.ic_temperature_control );
             }
 
         }

@@ -12,7 +12,7 @@ import android.util.AttributeSet;
 
 public class PipeView extends FieldDeviceView {
 
-    private static int PIPE_RADIUS_PX = 5;
+    private final static int PIPE_RADIUS_PX = 5;
 
     private ShapeDrawable shapeWater;
     private Paint paintPipe;

@@ -165,8 +165,7 @@ public class PumpOverFragment extends SectionFragment {
 
                                 PutDataRequest request = putDataMapRequest.asPutDataRequest();
                                 request.setUrgent();
-                                Task<DataItem> putDataTask = myDataClient.putDataItem(request);
-                                // Optionally a Success / Failure listener may be added to the task
+                                myDataClient.putDataItem(request);
                             }
 
                             if (sourceTankID == targetTankID) {

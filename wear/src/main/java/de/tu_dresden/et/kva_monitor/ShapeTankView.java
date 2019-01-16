@@ -7,12 +7,20 @@ import android.graphics.Paint;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
 import android.util.AttributeSet;
-
+/**
+ * View to display a tank on the UI
+ */
 public class ShapeTankView extends FieldDeviceView {
 
+    /**
+     * width:height ratio of the tank
+     */
     private static final int TANK_WIDTH_RATIO   = 3;
     private static final int TANK_HEIGHT_RATIO  = 5;
 
+    /**
+     * UI elements
+     */
     private ShapeDrawable shapeContainer;
     private ShapeDrawable shapeWaterLevel;
     private int maxWaterLevel;
@@ -28,7 +36,7 @@ public class ShapeTankView extends FieldDeviceView {
         InitShapeTankView();
     }
 
-    // generalised constructor
+    // constructor
     private void InitShapeTankView() {
         shapeContainer  = new ShapeDrawable( new RectShape() );
         shapeWaterLevel = new ShapeDrawable( new RectShape() );
@@ -39,6 +47,10 @@ public class ShapeTankView extends FieldDeviceView {
         onExitAmbient();
     }
 
+    /**
+     * Positions the tank.  Call this method fter the UI thread finished inflating the parent
+     * fragment.
+     */
     @Override
     public void resize() {
         int width  = this.getWidth();
@@ -96,6 +108,10 @@ public class ShapeTankView extends FieldDeviceView {
         this.maxWaterLevel = maxWaterLevel;
     }
 
+    /**
+     * Sets the water level, scaled to the maxWaterLevel
+     * @param waterLevel
+     */
     public void setWaterLevel(int waterLevel) {
         setWaterLevel(waterLevel, false);
     }
@@ -118,6 +134,11 @@ public class ShapeTankView extends FieldDeviceView {
         }
     }
 
+    /**
+     * View was touched. Check whether the interactive area was touched
+     * @param x horizontal coordinate
+     * @param y vertical coordinate
+     */
     public void setPressed(float x, float y) {
         boolean areaPressed = (
                 coordLeft <= x && x <= coordRight &&

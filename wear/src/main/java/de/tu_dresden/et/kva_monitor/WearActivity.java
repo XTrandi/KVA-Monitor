@@ -36,6 +36,9 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
 
     static final String START_ARGUMENT      = "Start_Argument";
 
+    /**
+     * Calculating the hash codes of possible data points that caused a notification
+     */
     static final int START_ARGUMENT_DEFAULT = 0;
     static final int START_ARGUMENT_LH1     = "LH1".hashCode();
     static final int START_ARGUMENT_LH2     = "LH2".hashCode();
@@ -67,12 +70,18 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
 
         setContentView(R.layout.activity_wear);
 
+        // retrieve layout's views
         timeView = findViewById(R.id.time_view);
         connectionStatusView = findViewById(R.id.connection_status_view);
 
         WearableNavigationDrawerView myNavigationDrawer = findViewById(R.id.navigation_drawer);
         myNavigationDrawer.setAdapter(new NavigationAdapter(this));
         myNavigationDrawer.addOnItemSelectedListener(new WearableNavigationDrawerView.OnItemSelectedListener() {
+
+            /**
+             * determine which fragment to display
+             * @param index the selected item
+             */
             @Override
             public void onItemSelected(int index) {
                 if (currentFragmentID == index) { return; }
@@ -100,6 +109,8 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
             }
         });
 
+        // if this activity was not directly started by the app-icon but fired by the
+        // ActivityLauncherService
         Intent intent = getIntent();
         int argValue = intent.getIntExtra(START_ARGUMENT, START_ARGUMENT_DEFAULT);
         Bundle args = new Bundle();
@@ -149,12 +160,13 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
             currentFragment = new PumpOverFragment();
         }
 
+        // display initial fragment
         getFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, currentFragment )
                 .commit();
 
-        // Check connection status (to phone via bluetooth + OPC server via HTTP)
+        // Check connection status (to phone via bluetooth + OPC server via HTTP) periodically
         myDataClient = Wearable.getDataClient(this);
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -166,6 +178,7 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
                     public void run() {
                         long timeDifference = Calendar.getInstance().getTime().getTime() - lastReplyTime;
                         if (timeDifference > MAX_TIME_DIFFERENCE_SEC * 1000) {
+                            // connection timeout exceed, inform user with system icon
                             connectionStatusView.setVisibility(View.VISIBLE);
                         }
                         else {
@@ -179,7 +192,7 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
         }, POLLING_INTERVAL_SEC, POLLING_INTERVAL_SEC, TimeUnit.SECONDS);
 
 
-        // Enables Always-on
+        // Enables Always-on mode
         setAmbientEnabled();
     }
 
@@ -199,6 +212,8 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
                     DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
                     String sReplyTime = dataMap.getString("ReplyTime");
 
+                    // ISO 8601 time zone is not available on API 23 or lower, therefore the time
+                    // zone is hardcoded
                     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'+01:00'");
 
                     try {
@@ -218,7 +233,7 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
         myDataClient.removeListener(this);
     }
 
-    // Wearable navigation drawer on top of the activity
+    // Wearable navigation drawer UI on top of the activity
     private final class NavigationAdapter
             extends WearableNavigationDrawerView.WearableNavigationDrawerAdapter {
 
@@ -301,6 +316,9 @@ public class WearActivity extends WearableActivity implements DataClient.OnDataC
         }
     }
 
+    /**
+     * sets the time during ambient mode in default format
+     */
     private void setTime() {
         String sTime = DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date());
         timeView.setText(sTime);

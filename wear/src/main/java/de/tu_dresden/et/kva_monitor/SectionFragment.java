@@ -19,6 +19,9 @@ import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.DataItemBuffer;
 import com.google.android.gms.wearable.Wearable;
 
+/**
+ * Default fragment for the KVA-Monitor on wear. Handles the DataClientListener
+ */
 public abstract class SectionFragment extends Fragment implements DataClient.OnDataChangedListener {
 
     static final String PATH_WEAR_UI        = "/wear_UI";
@@ -30,8 +33,7 @@ public abstract class SectionFragment extends Fragment implements DataClient.OnD
     In ambient mode the UI is supposed to be updated via onUpdateAmbient (about every 1 minute).
     Therefore the fragment does not listen to changes during ambient mode but will retrieve them
     manually on ambient update demand.
-     */
-
+    */
     public void onEnterAmbient() {
         myDataClient.removeListener(this);
     }
@@ -63,18 +65,9 @@ public abstract class SectionFragment extends Fragment implements DataClient.OnD
                     public void onSuccess(DataItemBuffer dataItemBuffer) {
                         Log.d("Wear", "Startup receive successful");
                         for (DataItem dataItem: dataItemBuffer) {
-                            readOutData(dataItem);
+                            readOutData(dataItem); // pass the data over the UI
                         }
                         dataItemBuffer.release();
-                    }
-                }
-        );
-        task.addOnFailureListener(
-                new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d("Wear", e.getMessage());
-                        // Data Client could not be accessed, handheld is not reachable.
                     }
                 }
         );
@@ -99,6 +92,10 @@ public abstract class SectionFragment extends Fragment implements DataClient.OnD
         }
     }
 
+    /**
+     * Subclasses use this method to receive any updates from the handheld via
+     * @param item The item which stores the data.
+     */
     protected abstract void readOutData(DataItem item);
 
 }

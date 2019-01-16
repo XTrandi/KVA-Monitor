@@ -9,15 +9,24 @@ import android.graphics.drawable.shapes.OvalShape;
 import android.graphics.drawable.shapes.PathShape;
 import android.util.AttributeSet;
 
+/**
+ * View for showing a pump according to a "R&I-Fließbild".
+ */
 public class ShapePumpView extends FieldDeviceView {
 
+    /**
+     * UI elements
+     */
     private ShapeDrawable shapeCircle;
     private ShapeDrawable pumpLines;
     private ShapeDrawable shapePumpStateBorder;
     private ShapeDrawable shapePumpState; // described as triangle with color change
 
-
     private boolean pumpState;
+    /**
+     * Helper variable to always enable interaction when the pump is running (for turning it off)
+     * Overriding the superclass' variable interactionEnabled
+     */
     private boolean pumpInteractionEnabled = true;
 
     public ShapePumpView(Context context) {
@@ -30,6 +39,7 @@ public class ShapePumpView extends FieldDeviceView {
         InitShapePumpView();
     }
 
+    // constructor
     private void InitShapePumpView() {
         pumpState = false;
 
@@ -43,7 +53,6 @@ public class ShapePumpView extends FieldDeviceView {
         //myPath.arcTo(0, 0, 100, 100, 90,180, false);
 
         pumpLines = new ShapeDrawable( new PathShape(pathPumpLines, 100, 100) );
-
 
         // Defining pump state shape
         Path pathPumpState = new Path();
@@ -65,11 +74,16 @@ public class ShapePumpView extends FieldDeviceView {
         onExitAmbient();
     }
 
+    /**
+     * Positions the pump in the middle horizontally and at yCenter vertically. Call this method
+     * after the UI thread finished inflating the parent fragment.
+     * @param yCenter 0.0 .. 1.0
+     * @param span 0.0 .. 1.0 Defining the pump's width in ratio to the width available.
+     */
     public void resize(float yCenter, float span) {
         int width  = this.getWidth();
         int height = this.getHeight();
         float size = span * width;
-
 
         coordLeft   = (int) ( width - size + STROKE_WIDTH ) / 2;
         coordRight  = (int) ( width + size - STROKE_WIDTH) / 2;
@@ -135,6 +149,7 @@ public class ShapePumpView extends FieldDeviceView {
         int xCenter = (coordRight + coordLeft) / 2;
         int yCenter = (coordTop + coordBottom) / 2;
 
+        // interaction area is the circle around the pump.
         boolean areaPressed = ( Math.pow(x - xCenter, 2) + Math.pow(y - yCenter, 2) ) < Math.pow(radius, 2);
         if (isPressed != areaPressed) {
             isPressed = areaPressed && interactionEnabled;
@@ -145,6 +160,7 @@ public class ShapePumpView extends FieldDeviceView {
     public void setPumpState(boolean pumpState) {
         if (pumpState != this.pumpState) {
             this.pumpState = pumpState;
+            // overriding the superclass' variable
             this.interactionEnabled = this.pumpInteractionEnabled || pumpState;
             this.invalidate();
         }

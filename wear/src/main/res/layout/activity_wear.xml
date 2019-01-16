@@ -24,7 +24,6 @@
                 android:layout_height="match_parent"
                 app:boxedEdges="all"
                 tools:ignore="MissingPrefix">
-
             </FrameLayout>
 
             <TextView
@@ -39,15 +38,13 @@
 
             <ImageView
                 android:id="@+id/connection_status_view"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_cloud_off_black_24dp"
                 android:contentDescription="@string/connection_status"
                 android:visibility="invisible" />
 
         </RelativeLayout>
-
-
 
     </android.support.wear.widget.BoxInsetLayout>
 

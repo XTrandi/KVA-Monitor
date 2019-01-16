@@ -26,12 +26,19 @@ import com.google.android.gms.wearable.PutDataRequest;
 
 import java.lang.reflect.Field;
 
+/**
+ * Fragment to show temperature control. Pressing on the start / stop button turns control on / off.
+ * Pressing on the dashed rectangle pops-up a dialog to alter the temperature setpoint.
+ */
 public class TemperatureControlFragment extends SectionFragment{
 
     private static final int MAX_WATER_LEVEL            = 280;
     private static final int MIN_TEMPERATURE_SETPOINT   = 20;
     private static final int MAX_TEMPERATURE_SETPOINT   = 55;
 
+    /**
+     * UI elements
+     */
     private ShapeTankView tankView;
     private ImageView motorView;
     private ImageView heatExchangerView;
@@ -47,10 +54,12 @@ public class TemperatureControlFragment extends SectionFragment{
 
     private Dialog dialog;
 
-    //private NumberPicker setPointNumberPicker;
 
     private boolean ambientMode = false;
 
+    /**
+     * Process data that have to be stored temporarily
+     */
     private boolean heatingState = false;
     private boolean stirrerState = false;
     private boolean controlState = false;
@@ -72,6 +81,7 @@ public class TemperatureControlFragment extends SectionFragment{
         setPointNumberPicker.setWrapSelectorWheel(false);
         setNumberPickerTextColor(setPointNumberPicker, Color.BLACK);
 
+        // Dialog to change the temperature setpoint when the touch setPointOpenDialogView is pressed
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getContext());
         dialogBuilder.setView( setPointNumberPicker );
         dialogBuilder.setTitle( getString(R.string.change_setpoint) );
@@ -79,6 +89,7 @@ public class TemperatureControlFragment extends SectionFragment{
         dialogBuilder.setPositiveButton(getString(R.string.accept), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                // Send temperature set point
                 PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(PATH_OPC_REQUEST);
                 DataMap dataMap = putDataMapRequest.getDataMap();
 
@@ -128,6 +139,7 @@ public class TemperatureControlFragment extends SectionFragment{
         controlStateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Start / stop temperature control
                 PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(PATH_OPC_REQUEST);
                 DataMap dataMap = putDataMapRequest.getDataMap();
 
@@ -230,6 +242,9 @@ public class TemperatureControlFragment extends SectionFragment{
         }
     }
 
+    /**
+     * Method to update the UI accoriding to process data and ambient mode
+     */
     private void updateUI () {
         if ( ambientMode ) {
             if (stirrerState) {

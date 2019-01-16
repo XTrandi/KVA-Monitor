@@ -17,7 +17,10 @@ import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 
-
+/**
+ * Fragment to show the tank levels. By pressing the UI tank its ID can be toggled and shows the
+ * other water levels. Pressing on the pump sends pump over requests or sends a stop request.
+ */
 public class PumpOverFragment extends SectionFragment {
 
     static final String ARGUMENT_SOURCE_TANK = "Argument_SourceTank";
@@ -30,18 +33,27 @@ public class PumpOverFragment extends SectionFragment {
     private int sourceTankID         = 0;
     private int targetTankID         = 1;
 
+    /**
+     * process data
+     */
     private float[] waterLevel       = new float[3];
     private boolean [] pumpState     = new boolean[3];
     private int pumpStateAnalog;
     private boolean [] drainValve    = new boolean[3];
     private boolean [] sourceValve   = new boolean[3];
 
+    /**
+     * UI elements
+     */
     private ShapeTankView sourceTankView;
     private ShapeTankView targetTankView;
     private ShapePumpView pumpView;
     private PipeView leftPipeView;
     private PipeView rightPipeView;
 
+    /**
+     * Where to position the pump and the pipes vertically (at 2/3)
+     */
     private static final float Y_CENTER_RATE = 0.66f;
 
     Paint textPaint;
@@ -57,12 +69,12 @@ public class PumpOverFragment extends SectionFragment {
 
         final View view = inflater.inflate(R.layout.pump_over_frame, container, false);
 
+        // Fragment is supplied with start arguments to show initial tanks
         Bundle bundle = this.getArguments();
         if ( bundle!=null ) {
             sourceTankID = bundle.getInt(ARGUMENT_SOURCE_TANK);
             targetTankID = bundle.getInt(ARGUMENT_TARGET_TANK);
         }
-
 
         // Define text font
         textPaint = new Paint();
@@ -70,9 +82,6 @@ public class PumpOverFragment extends SectionFragment {
         textPaint.setTextAlign(Paint.Align.CENTER);
         // scale text size from pixel (px) to scalable pixels (sp <--> dp for fonts)
         textPaint.setTextSize( TEXT_SIZE_PX * getResources().getDisplayMetrics().density );
-        // not sure if this codeline is supported...
-        //textPaint.setTypeface(
-        //        Typeface.create("Roboto Condensed", Typeface.NORMAL) );
 
         sourceTankView = view.findViewById(R.id.source_tank_view);
         targetTankView = view.findViewById(R.id.target_tank_view);
@@ -88,6 +97,9 @@ public class PumpOverFragment extends SectionFragment {
         targetTankView.setText("B" + String.valueOf(targetTankID+1) );
         pumpView.setText("P" + String.valueOf(sourceTankID+1) );
 
+        /**
+         * Covers all user input in this fragment.
+         */
         class InspectTouchArea implements View.OnTouchListener {
 
             @Override
@@ -101,10 +113,11 @@ public class PumpOverFragment extends SectionFragment {
                     case MotionEvent.ACTION_MOVE:
                         fieldDeviceView.setPressed( event.getX(), event.getY() );
                         break;
-
+                    // invoke action (if interaction area is covered)
                     case MotionEvent.ACTION_UP:
                         if ( fieldDeviceView.getPressed() ) {
-                            
+
+                            // toggle the source tank and its pipe (= valve state)
                             if (fieldDeviceView.equals(sourceTankView)) {
                                 sourceTankID = (sourceTankID + 1) % 3;
                                 sourceTankView.setWaterLevel( (int) waterLevel[sourceTankID] );
@@ -124,6 +137,7 @@ public class PumpOverFragment extends SectionFragment {
 
                                 leftPipeView.setState( drainValve[sourceTankID] );
                             }
+                            // toggle the target tank and its pipe (= valve state)
                             else if (fieldDeviceView.equals(targetTankView)) {
                                 targetTankID = (targetTankID + 1) % 3;
                                 targetTankView.setWaterLevel( (int) waterLevel[targetTankID] );
@@ -169,6 +183,7 @@ public class PumpOverFragment extends SectionFragment {
                             }
 
                             if (sourceTankID == targetTankID) {
+                                // hide the pipes (it doesn't make any sense) and disable the pump
                                 leftPipeView.setVisibility( View.INVISIBLE );
                                 rightPipeView.setVisibility( View.INVISIBLE );
                                 pumpView.enableInteraction(false);
@@ -190,6 +205,7 @@ public class PumpOverFragment extends SectionFragment {
             }
         }
 
+        // enable user interaction on these views
         sourceTankView.setOnTouchListener( new InspectTouchArea() );
         targetTankView.setOnTouchListener( new InspectTouchArea() );
         pumpView.setOnTouchListener( new InspectTouchArea() );
@@ -197,7 +213,7 @@ public class PumpOverFragment extends SectionFragment {
         sourceTankView.setMaxWaterLevel(MAX_WATER_LEVEL);
         targetTankView.setMaxWaterLevel(MAX_WATER_LEVEL);
 
-        // Inflating layout is ready, resizing possible
+        // Inflating layout is ready, resizing possible, position all UI elements
         view.post(new Runnable() {
             @Override
             public void run() {

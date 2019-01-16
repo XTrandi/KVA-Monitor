@@ -9,7 +9,9 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
 import android.util.AttributeSet;
 
-
+/**
+ * Simple view that displays water flow in a pipe (or not)
+ */
 public class PipeView extends FieldDeviceView {
 
     private final static int PIPE_RADIUS_PX = 5;
@@ -17,6 +19,10 @@ public class PipeView extends FieldDeviceView {
     private ShapeDrawable shapeWater;
     private Paint paintPipe;
 
+    /**
+     * true: water flow enabled (valve open) and visualised by a blue filled area
+     * false: water flow disabled, no fill shown
+     */
     private boolean state = false;
 
     public PipeView(Context context) {
@@ -29,7 +35,7 @@ public class PipeView extends FieldDeviceView {
         InitPipeView();
     }
 
-    // here unused
+    // here unused, because no interaction intended
     @Override
     public void setPressed(float x, float y) { }
 
@@ -48,6 +54,11 @@ public class PipeView extends FieldDeviceView {
         onExitAmbient();
     }
 
+    /**
+     * Positions the pipe using full available width.
+     * @param yCenter where to place its vertical center, given as ratio from its maximum height
+     *                (0.0 ... 1.0)
+     */
     public void resize(float yCenter) {
         int width = this.getWidth();
         int height = this.getHeight();
@@ -61,6 +72,10 @@ public class PipeView extends FieldDeviceView {
         this.invalidate();
     }
 
+    /**
+     * Sets the water flow
+     * @param state
+     */
     public void setState(boolean state) {
         if ( this.state != state) {
             this.state = state;
@@ -72,7 +87,10 @@ public class PipeView extends FieldDeviceView {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        // draw water flow
         if ( !ambientMode && state) { shapeWater.draw(canvas); }
+
+        // draw surrounding pipes
         canvas.drawLine(coordLeft, coordTop, coordRight, coordTop, paintPipe);
         canvas.drawLine(coordLeft, coordBottom, coordRight, coordBottom, paintPipe);
     }

@@ -8,6 +8,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
+/**
+ * Minimal activity to hold a dialog to start / stop OPC server communication
+ */
 public class ControlActivity extends Activity {
 
     @Override

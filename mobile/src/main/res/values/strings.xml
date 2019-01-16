@@ -17,7 +17,7 @@
     <string name="stop_service_title">Dienst im Betrieb</string>
     <string name="start_service_title">Dienst ausgeschaltet</string>
     <string name="stop_service_message">Prozessdaten werden nicht mehr empfangen und Alarme werden nicht mehr weitergeleitet. Dienst jetzt anhalten?</string>
-    <string name="start_service_message">Dieses Gerät sendet periodisch Anfragen zum OPC-Server der Kleinversuchsanlage. Damit können Prozessdaten visualisiert und Grenzüberschreitungen mit Hilfe von Benachrichtigungen gesendet werden. Dienst jetzt starten?</string>
+    <string name="start_service_message">Dieses Gerät sendet periodisch Anfragen zum OPC-Server der Kleinversuchsanlage. Damit können Prozessdaten visualisiert und Grenzüberschreitungen mit Hilfe von Benachrichtigungen gemeldet werden. Dienst jetzt starten?</string>
     <string name="cancel">Abbrechen</string>
     <string name="accept">Ok</string>
     <string name="service_stopped">Dienst wurde angehalten</string>

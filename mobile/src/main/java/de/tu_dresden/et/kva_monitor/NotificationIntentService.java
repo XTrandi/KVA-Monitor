@@ -14,6 +14,10 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Background task send a DataClient Message (Remote Procedure Call) to open the Wear app with
+ * sensible configuration view.
+ */
 public class NotificationIntentService extends IntentService {
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
@@ -34,9 +38,7 @@ public class NotificationIntentService extends IntentService {
 
         ByteBuffer buffer = ByteBuffer.allocate(4);
         int notificationID =args.getInt(CommService.PATH_LAUNCH_ACTIVITY);
-        buffer.putInt( notificationID );
-
-
+        buffer.putInt( notificationID ); // convert int to 4-byte-array
 
         try {
             // retrieve connected nodes (in this case all wearable devices)

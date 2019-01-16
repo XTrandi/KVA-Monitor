@@ -15,8 +15,9 @@ import java.lang.reflect.Field;
 
 public class BinaryAlarm {
 
-    static final long[] VIBRATION_PATTERN       = {0, 250, 250, 250};
 
+    // standard vibration pattern
+    static final long[] VIBRATION_PATTERN       = {0, 250, 250, 250};
 
     // the present value of this data point
     private boolean presentValue;
@@ -24,6 +25,7 @@ public class BinaryAlarm {
     // the present value has to be equal to this reference value in order to cause an alarm
     private boolean alarmValue;
 
+    // Usage of the data point's string's hashCode
     private int notificationID;
 
     private CommService context;
@@ -36,6 +38,7 @@ public class BinaryAlarm {
 
     private State alarmState;
 
+    // constructor
     public BinaryAlarm(CommService context, String resourceIdentifier) {
         this.context = context;
         alarmState = State.NORMAL;
@@ -47,6 +50,7 @@ public class BinaryAlarm {
         int resID;
 
         try {
+            // get the alarm parameter from the resources via name and not integer ID
             field = R.bool.class.getDeclaredField(resourceIdentifier + "_alarmValue");
             resID = field.getInt(field);
             alarmValue = res.getBoolean(resID);
@@ -82,7 +86,11 @@ public class BinaryAlarm {
 
     }
 
-
+    /**
+     * Sets the current value and fires a notification when this data point is in an out of normal
+     * state
+     * @param presentValue
+     */
     public void setPresentValue(boolean presentValue) {
         if (presentValue == this.presentValue) { return; }
 
@@ -109,9 +117,17 @@ public class BinaryAlarm {
                             R.drawable.ic_open_in_app, context.getString(R.string.open_in_app),
                             pendingIntent);
 
+                    NotificationCompat.Action.Builder actionBuilder = new NotificationCompat.Action.Builder(action);
+
+                    NotificationCompat.Action.WearableExtender actionExtender =
+                            new NotificationCompat.Action.WearableExtender()
+                                    .setHintLaunchesActivity(true) // Unseen in Android Wear 1.5
+                                    .setHintDisplayActionInline(true);
+
+                    // Add this action only to the wear device
                     NotificationCompat.WearableExtender wearableExtender =
                             new NotificationCompat.WearableExtender()
-                                    .addAction(action);
+                                    .addAction(actionBuilder.extend(actionExtender).build());
 
                     notificationBuilder.extend(wearableExtender);
 

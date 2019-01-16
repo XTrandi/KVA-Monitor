@@ -47,30 +47,54 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
+/**
+ * This service is responsible for sending OPC XML-DA requests periodically to the OPC server and
+ * forwarding its response parsed to the wearable device via DataClient. It also listens to any
+ * write requests from the wear device and parses this into an XML format to the OPC server.
+ * As a foreground service it shows its current connection status and manages the alarm database.
+ */
 public class CommService extends Service implements DataClient.OnDataChangedListener {
 
+    /**
+     * Objects to handle any commands that are not supposed to run on the UI thread
+     */
     private Looper looper;
     private ServiceHandler serviceHandler;
     private HandlerThread thread;
 
+    /**
+     * message IDs for background threads
+     */
     static final int STOP_SERVICE_WHATID        = 0;
     static final int READ_REQUEST_WHATID        = 1;
     static final int WRITE_REQUEST_WHATID       = 2;
 
     static final int ONGOING_NOTIFICATION_ID    = 1;
 
+    /**
+     * Polling interval to the OPC server
+     */
     static final int POLLING_INTERVAL_MS        = 500;
 
     static final String XML_DA_URL              = "http://141.30.154.211:8087/OPC/DA";
 
+    /**
+     * XML-namespaces
+     */
     static final String NAMESPACE_SOAP          = "http://schemas.xmlsoap.org/soap/envelope/";
     static final String NAMESPACE_XSI           = "http://www.w3.org/2001/XMLSchema-instance";
     static final String NAMESPACE_XSD           = "http://www.w3.org/2001/XMLSchema";
 
+    /**
+     * URI paths for DataClient
+     */
     static final String PATH_WEAR_UI            = "/wear_UI";
     static final String PATH_OPC_REQUEST        = "/OPC_request";
     static final String PATH_LAUNCH_ACTIVITY    = "/launch_activity";
 
+    /**
+     * Notification channel IDs (not tested, since ignored in lower OS versions of Android 8.0
+     */
     static final String CHANNEL_ID_ALARM        = "Alarm";
     static final String CHANNEL_ID_CONN_STATUS  = "Connection Status";
 
@@ -149,6 +173,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
 
     private DataClient myDataClient;
 
+    // HashMap for the BinaryAlarms
     private Map<String, BinaryAlarm> alarmDatabase;
 
     private NotificationCompat.Builder notificationBuilder;
@@ -343,8 +368,10 @@ public class CommService extends Service implements DataClient.OnDataChangedList
             connection.setConnectTimeout(3000);
             connection.setRequestMethod("POST");
             connection.setDoInput(true);
+
+            //set header
             connection.addRequestProperty("SOAPAction",
-                    "\"http://opcfoundation.org/webservices/XMLDA/1.0/" + typeIO + "\""); //header
+                    "\"http://opcfoundation.org/webservices/XMLDA/1.0/" + typeIO + "\"");
 
             connection.setFixedLengthStreamingMode(body.length());
 
@@ -388,7 +415,7 @@ public class CommService extends Service implements DataClient.OnDataChangedList
                     .setContentText(getString(R.string.notification_OPCconnection_failed_text));
             NotificationManagerCompat.from(this)
                     .notify(ONGOING_NOTIFICATION_ID, notificationBuilder.build());
-            return;
+            return; // omit reading / parsing
         } else {
             notificationBuilder
                     .setContentTitle(getString(R.string.notification_OPC_connection_title))
@@ -414,7 +441,6 @@ public class CommService extends Service implements DataClient.OnDataChangedList
             parser.require(XmlPullParser.START_TAG, NAMESPACE_SOAP, "Envelope"); parser.next();
             parser.require(XmlPullParser.START_TAG, NAMESPACE_SOAP, "Body"); parser.next();
             parser.require(XmlPullParser.START_TAG, null, "ReadResponse");
-
 
             int eventType;
             String itemName, dataType, value;
